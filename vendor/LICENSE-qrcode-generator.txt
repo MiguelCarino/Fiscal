@@ -1,0 +1,9 @@
+QR Code Generator for JavaScript
+Copyright (c) 2009 Kazuhiko Arase — http://www.d-project.com/
+Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+
+"QR Code" is a registered trademark of DENSO WAVE INCORPORATED.
+http://www.denso-wave.com/qrcode/faqpatent-e.html
+
+Vendored at version 1.4.4 from cdnjs. MIT is compatible with this project's
+AGPL-3.0; the notice above travels with the file, as MIT requires.

@@ -1,0 +1,74 @@
+{
+  "iso": "JP",
+  "tier": 2,
+  "authority": "国税庁 — National Tax Agency",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.houjin-bangou.nta.go.jp/"
+  },
+  "identifiers": [
+    {
+      "key": "corporateNumber",
+      "label": {
+        "en": "法人番号 (Corporate Number)"
+      },
+      "format": "^[0-9]{13}$",
+      "checksum": {
+        "engine": "mod9"
+      },
+      "note": {
+        "en": "The check digit LEADS the 12-digit commercial registration number rather than trailing it, which is why a corporate number never begins with 0."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "corporateNumber",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "refused": [
+    {
+      "key": "myNumber",
+      "label": {
+        "en": "My Number (個人番号)"
+      },
+      "reason": {
+        "en": "This app will not store a My Number. Japan's My Number Act constrains its collection and handling tightly, and no counter interaction this app serves requires it. Use the corporate number for business, and nothing for personal.",
+        "ja": "このアプリはマイナンバーを保存しません。番号法により取扱いが厳しく制限されており、本アプリが扱う窓口のやり取りでは不要です。法人は法人番号を、個人は登録なしでご利用ください。"
+      }
+    }
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "適格請求書 (qualified invoice)",
+    "note": {
+      "en": "Under the invoice system a registered number on the invoice is what preserves the purchaser's credit.",
+      "ja": "インボイス制度では、登録番号の記載が仕入税額控除の前提になります。"
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.nta.go.jp/"
+  }
+}

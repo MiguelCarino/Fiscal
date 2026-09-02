@@ -1,0 +1,75 @@
+{
+  "iso": "GB",
+  "tier": 2,
+  "authority": "HMRC",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.gov.uk/government/organisations/hm-revenue-customs"
+  },
+  "identifiers": [
+    {
+      "key": "vat",
+      "label": {
+        "en": "VAT number"
+      },
+      "format": "^(GB)?[0-9]{9}([0-9]{3})?$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    },
+    {
+      "key": "utr",
+      "label": {
+        "en": "UTR"
+      },
+      "format": "^[0-9]{10}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "vat",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "vat",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "none",
+    "scheme": null,
+    "note": {
+      "en": "No general e-invoicing mandate. A VAT number on the invoice matters for reclaim."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.gov.uk/government/organisations/hm-revenue-customs"
+  }
+}

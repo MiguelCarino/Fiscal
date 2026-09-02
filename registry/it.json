@@ -1,0 +1,98 @@
+{
+  "iso": "IT",
+  "tier": 2,
+  "authority": "Agenzia delle Entrate",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.agenziaentrate.gov.it/"
+  },
+  "identifiers": [
+    {
+      "key": "partitaIva",
+      "label": {
+        "en": "Partita IVA"
+      },
+      "format": "^[0-9]{11}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    },
+    {
+      "key": "codiceFiscale",
+      "label": {
+        "en": "Codice fiscale"
+      },
+      "format": "^[A-Z0-9]{11,16}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "partitaIva",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "partitaIva",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address",
+        "peppolId"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "peppol": {
+    "eas": "9906",
+    "scheme": "Italian VAT number",
+    "label": {
+      "en": "Peppol address",
+      "es": "Dirección Peppol"
+    },
+    "note": {
+      "en": "Electronic address for e-invoice routing: the EAS scheme code plus your identifier. Carry it now and the card is already correct when a counterparty moves to Peppol.",
+      "es": "Dirección electrónica para el enrutamiento de facturas: el código de esquema EAS más tu identificador. Tenerlo ya deja la tarjeta lista cuando una contraparte pase a Peppol."
+    },
+    "verified": "2026-09-02",
+    "src": "https://docs.peppol.eu/edelivery/codelists/"
+  },
+  "fields": {
+    "peppolId": {
+      "label": {
+        "en": "Peppol ID",
+        "es": "ID Peppol"
+      }
+    }
+  },
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "FatturaPA / SdI",
+    "note": {
+      "en": "Give the Codice Destinatario or PEC address as well as the tax number — the invoice routes on it."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.agenziaentrate.gov.it/"
+  }
+}

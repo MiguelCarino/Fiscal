@@ -1,0 +1,93 @@
+{
+  "_readme": [
+    "Sample cards for #demo. Loaded into memory only — never written to storage,",
+    "never mixed with real cards, and cleared the moment you leave the demo.",
+    "",
+    "Every identifier here is invented, but each one satisfies its jurisdiction's",
+    "real check-digit rule. That matters: a demo whose validation badges all read",
+    "red would teach the opposite of what the app does. The names are deliberately",
+    "obvious ('DEMO', 'EJEMPLO') so nothing here can be mistaken for a real entity.",
+    "",
+    "Check digits solved with js/engines.js — see tools/validate.py for the gate."
+  ],
+  "cards": [
+    {
+      "iso": "MX", "kind": "business", "label": "Ejemplo Demo (persona moral)",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "rfc": "DEM010101AB8",
+        "razonSocial": "EJEMPLO DEMO",
+        "regimenFiscal": "601",
+        "cp": "64000",
+        "email": "demo@example.com"
+      }
+    },
+    {
+      "iso": "MX", "kind": "personal", "label": "Ejemplo Demo (persona física)",
+      "verifiedOn": "2024-01-15",
+      "values": {
+        "rfc": "DEMO900101HB8",
+        "nombre": "EJEMPLO DEMO PEREZ",
+        "regimenFiscal": "626",
+        "cp": "64000"
+      }
+    },
+    {
+      "iso": "CO", "kind": "business", "label": "Demo Colombia SAS",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "tipoDocumento": "31",
+        "nit": "9001234568",
+        "razonSocial": "DEMO COLOMBIA SAS",
+        "email": "demo@example.co",
+        "responsabilidad": "R-99-PN"
+      }
+    },
+    {
+      "iso": "US", "kind": "business", "label": "Demo Systems LLC",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "ein": "123456789",
+        "legalName": "DEMO SYSTEMS LLC",
+        "address": "100 Example Street, Wilmington, DE 19801"
+      }
+    },
+    {
+      "iso": "BR", "kind": "business", "label": "Demo Brasil LTDA",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "cnpj": "11222333000181",
+        "legalName": "DEMO BRASIL LTDA",
+        "email": "demo@example.com.br"
+      }
+    },
+    {
+      "iso": "FR", "kind": "business", "label": "Démo France SARL",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "siren": "123456789",
+        "legalName": "DEMO FRANCE SARL",
+        "peppolId": "123456789",
+        "email": "demo@example.fr"
+      }
+    },
+    {
+      "iso": "JP", "kind": "business", "label": "デモ株式会社",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "corporateNumber": "7123456789012",
+        "legalName": "デモ株式会社",
+        "email": "demo@example.jp"
+      }
+    },
+    {
+      "iso": "IN", "kind": "business", "label": "Demo India Pvt Ltd",
+      "verifiedOn": "2026-09-02",
+      "values": {
+        "gstin": "27DEMOP1234A1ZT",
+        "legalName": "DEMO INDIA PRIVATE LIMITED",
+        "email": "demo@example.in"
+      }
+    }
+  ]
+}

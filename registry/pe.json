@@ -1,0 +1,85 @@
+{
+  "iso": "PE",
+  "tier": 2,
+  "authority": "SUNAT — Superintendencia Nacional de Aduanas y de Administración Tributaria",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.sunat.gob.pe/"
+  },
+  "identifiers": [
+    {
+      "key": "ruc",
+      "label": {
+        "en": "RUC"
+      },
+      "format": "^[0-9]{11}$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "weights": [
+          5,
+          4,
+          3,
+          2,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "map": "peru"
+      }
+    },
+    {
+      "key": "dni",
+      "label": {
+        "en": "DNI"
+      },
+      "format": "^[0-9]{8}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "dni",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "ruc",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "Comprobante electrónico",
+    "note": {
+      "en": "RUC for a factura, DNI for a boleta."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.sunat.gob.pe/"
+  }
+}

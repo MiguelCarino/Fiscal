@@ -1,0 +1,334 @@
+{
+  "iso": "MX",
+  "tier": 1,
+  "authority": "SAT — Servicio de Administración Tributaria",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.sat.gob.mx/tramites/03655/cedula-de-datos-fiscales",
+    "note": "Field set is the CFDI 4.0 minimum carried by the Cédula de Datos Fiscales, which SAT publishes for exactly this purpose: handing your data to whoever invoices you. The Constancia de Situación Fiscal carries more (full domicilio) and is deliberately not the model here."
+  },
+  "identifiers": [
+    {
+      "key": "rfc",
+      "label": {
+        "en": "RFC",
+        "es": "RFC"
+      },
+      "format": "^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$",
+      "checksum": {
+        "engine": "mx-rfc"
+      },
+      "reserved": [
+        "XAXX010101000",
+        "XEXX010101000"
+      ],
+      "reservedNote": {
+        "en": "SAT's generic RFCs. XAXX010101000 (público en general) does not satisfy the check-digit algorithm — it is an administrative constant, not a broken number.",
+        "es": "RFC genéricos del SAT. XAXX010101000 (público en general) no cumple el dígito verificador: es una constante administrativa, no un número mal capturado."
+      }
+    },
+    {
+      "key": "curp",
+      "label": {
+        "en": "CURP",
+        "es": "CURP"
+      },
+      "format": "^[A-Z][AEIOUX][A-Z]{2}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "optional": true
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "rfc",
+        "nombre",
+        "regimenFiscal",
+        "cp"
+      ],
+      "optional": [
+        "usoCFDI",
+        "email"
+      ]
+    },
+    "business": {
+      "required": [
+        "rfc",
+        "razonSocial",
+        "regimenFiscal",
+        "cp"
+      ],
+      "optional": [
+        "usoCFDI",
+        "email"
+      ]
+    },
+    "note": {
+      "en": "Nombre / razón social must match SAT's records exactly, in capitals and without the corporate suffix (S.A. de C.V.). A mismatch is the most common cause of a rejected CFDI 4.0.",
+      "es": "El nombre o razón social debe coincidir exactamente con el registro del SAT, en mayúsculas y sin el régimen societario (S.A. de C.V.). Esa discrepancia es la causa más común de un CFDI 4.0 rechazado."
+    }
+  },
+  "fields": {
+    "nombre": {
+      "label": {
+        "en": "Name",
+        "es": "Nombre"
+      },
+      "transform": "upper"
+    },
+    "razonSocial": {
+      "label": {
+        "en": "Legal name",
+        "es": "Razón social"
+      },
+      "transform": "upper"
+    },
+    "cp": {
+      "label": {
+        "en": "Postal code",
+        "es": "Código postal"
+      },
+      "format": "^[0-9]{5}$"
+    },
+    "email": {
+      "label": {
+        "en": "Email",
+        "es": "Correo"
+      }
+    }
+  },
+  "catalogues": {
+    "regimenFiscal": {
+      "label": {
+        "en": "Tax regime",
+        "es": "Régimen fiscal"
+      },
+      "source": "SAT catálogo c_RegimenFiscal (CFDI 4.0)",
+      "verified": "2026-09-02",
+      "staleness": "SAT revises this catalogue; re-check against the published c_RegimenFiscal before trusting a code that is not in this list.",
+      "options": [
+        {
+          "code": "601",
+          "applies": [
+            "business"
+          ],
+          "label": "General de Ley Personas Morales"
+        },
+        {
+          "code": "603",
+          "applies": [
+            "business"
+          ],
+          "label": "Personas Morales con Fines no Lucrativos"
+        },
+        {
+          "code": "605",
+          "applies": [
+            "personal"
+          ],
+          "label": "Sueldos y Salarios e Ingresos Asimilados a Salarios"
+        },
+        {
+          "code": "606",
+          "applies": [
+            "personal"
+          ],
+          "label": "Arrendamiento"
+        },
+        {
+          "code": "607",
+          "applies": [
+            "personal"
+          ],
+          "label": "Régimen de Enajenación o Adquisición de Bienes"
+        },
+        {
+          "code": "608",
+          "applies": [
+            "personal"
+          ],
+          "label": "Demás ingresos"
+        },
+        {
+          "code": "610",
+          "applies": [
+            "personal",
+            "business"
+          ],
+          "label": "Residentes en el Extranjero sin Establecimiento Permanente en México"
+        },
+        {
+          "code": "611",
+          "applies": [
+            "personal"
+          ],
+          "label": "Ingresos por Dividendos (socios y accionistas)"
+        },
+        {
+          "code": "612",
+          "applies": [
+            "personal"
+          ],
+          "label": "Personas Físicas con Actividades Empresariales y Profesionales"
+        },
+        {
+          "code": "614",
+          "applies": [
+            "personal"
+          ],
+          "label": "Ingresos por intereses"
+        },
+        {
+          "code": "615",
+          "applies": [
+            "personal"
+          ],
+          "label": "Régimen de los ingresos por obtención de premios"
+        },
+        {
+          "code": "616",
+          "applies": [
+            "personal"
+          ],
+          "label": "Sin obligaciones fiscales"
+        },
+        {
+          "code": "620",
+          "applies": [
+            "business"
+          ],
+          "label": "Sociedades Cooperativas de Producción que optan por diferir sus ingresos"
+        },
+        {
+          "code": "621",
+          "applies": [
+            "personal"
+          ],
+          "label": "Incorporación Fiscal"
+        },
+        {
+          "code": "622",
+          "applies": [
+            "business"
+          ],
+          "label": "Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras"
+        },
+        {
+          "code": "623",
+          "applies": [
+            "business"
+          ],
+          "label": "Opcional para Grupos de Sociedades"
+        },
+        {
+          "code": "624",
+          "applies": [
+            "business"
+          ],
+          "label": "Coordinados"
+        },
+        {
+          "code": "625",
+          "applies": [
+            "personal"
+          ],
+          "label": "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas"
+        },
+        {
+          "code": "626",
+          "applies": [
+            "personal",
+            "business"
+          ],
+          "label": "Régimen Simplificado de Confianza"
+        },
+        {
+          "code": "628",
+          "applies": [
+            "business"
+          ],
+          "label": "Hidrocarburos"
+        },
+        {
+          "code": "629",
+          "applies": [
+            "business"
+          ],
+          "label": "De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales"
+        },
+        {
+          "code": "630",
+          "applies": [
+            "business"
+          ],
+          "label": "Enajenación de acciones en bolsa de valores"
+        }
+      ]
+    },
+    "usoCFDI": {
+      "label": {
+        "en": "CFDI use",
+        "es": "Uso de CFDI"
+      },
+      "source": "SAT catálogo c_UsoCFDI (CFDI 4.0) — abbreviated to the codes a counter actually asks for",
+      "verified": "2026-09-02",
+      "options": [
+        {
+          "code": "G01",
+          "label": "Adquisición de mercancías"
+        },
+        {
+          "code": "G02",
+          "label": "Devoluciones, descuentos o bonificaciones"
+        },
+        {
+          "code": "G03",
+          "label": "Gastos en general"
+        },
+        {
+          "code": "D01",
+          "label": "Honorarios médicos, dentales y gastos hospitalarios"
+        },
+        {
+          "code": "S01",
+          "label": "Sin efectos fiscales"
+        },
+        {
+          "code": "CP01",
+          "label": "Pagos"
+        }
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print",
+    "officialQr"
+  ],
+  "officialQr": {
+    "label": {
+      "en": "Cédula de Datos Fiscales QR",
+      "es": "QR de la Cédula de Datos Fiscales"
+    },
+    "get": "https://www.cloudb.sat.gob.mx/datos_fiscales/",
+    "note": {
+      "en": "Store the image SAT issued. The QR encodes a validation URL carrying your idCIF — it is not regenerated here, because a reconstructed URL that resolves to the wrong record is worse than no QR at all.",
+      "es": "Guarda la imagen emitida por el SAT. El QR contiene una URL de validación con tu idCIF; no se regenera aquí, porque una URL reconstruida que apunte al registro equivocado es peor que no tener QR."
+    }
+  },
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "CFDI 4.0",
+    "note": {
+      "en": "Every invoice is a CFDI. The buyer must supply RFC, name exactly as SAT holds it, régimen fiscal and postal code.",
+      "es": "Toda factura es un CFDI. El comprador debe dar RFC, nombre tal como lo tiene el SAT, régimen fiscal y código postal."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.sat.gob.mx/"
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "iso": "CO",
+  "tier": 1,
+  "authority": "DIAN — Dirección de Impuestos y Aduanas Nacionales",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.dian.gov.co/impuestos/factura-electronica/como-hacerlo/Paginas/para-los-compradores.aspx",
+    "note": "Since April 2025 DIAN autofills the buyer's name and email from the document number alone, so the counter needs the document type and number spoken correctly and little else. DIAN's own guidance is that the merchant must not ask for more than name, NIT and email."
+  },
+  "identifiers": [
+    {
+      "key": "nit",
+      "label": {
+        "en": "NIT",
+        "es": "NIT"
+      },
+      "format": "^[0-9]{9,10}$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "weights": [
+          41,
+          37,
+          29,
+          23,
+          19,
+          17,
+          13,
+          7,
+          3
+        ],
+        "map": "dian"
+      },
+      "checkLabel": {
+        "en": "verification digit",
+        "es": "dígito de verificación"
+      }
+    },
+    {
+      "key": "cedula",
+      "label": {
+        "en": "Cédula de ciudadanía",
+        "es": "Cédula de ciudadanía"
+      },
+      "format": "^[0-9]{6,10}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "The cédula carries no published check digit. Format only — the badge says so.",
+        "es": "La cédula no tiene dígito de verificación publicado. Solo formato: la etiqueta lo indica."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "tipoDocumento",
+        "cedula",
+        "email"
+      ],
+      "optional": [
+        "nombre",
+        "direccion"
+      ]
+    },
+    "business": {
+      "required": [
+        "tipoDocumento",
+        "nit",
+        "razonSocial",
+        "email"
+      ],
+      "optional": [
+        "direccion",
+        "responsabilidad"
+      ]
+    },
+    "note": {
+      "en": "Give the document type as well as the number — DIAN keys the autofill on the pair.",
+      "es": "Di el tipo de documento además del número: el autollenado de la DIAN se basa en la pareja."
+    }
+  },
+  "fields": {
+    "nombre": {
+      "label": {
+        "en": "Name",
+        "es": "Nombre"
+      }
+    },
+    "razonSocial": {
+      "label": {
+        "en": "Legal name",
+        "es": "Razón social"
+      }
+    },
+    "direccion": {
+      "label": {
+        "en": "Address",
+        "es": "Dirección"
+      }
+    },
+    "email": {
+      "label": {
+        "en": "Email",
+        "es": "Correo electrónico"
+      }
+    }
+  },
+  "catalogues": {
+    "tipoDocumento": {
+      "label": {
+        "en": "Document type",
+        "es": "Tipo de documento"
+      },
+      "source": "DIAN — tipos de documento de identificación, factura electrónica",
+      "verified": "2026-09-02",
+      "options": [
+        {
+          "code": "13",
+          "applies": [
+            "personal"
+          ],
+          "label": "Cédula de ciudadanía"
+        },
+        {
+          "code": "22",
+          "applies": [
+            "personal"
+          ],
+          "label": "Cédula de extranjería"
+        },
+        {
+          "code": "31",
+          "applies": [
+            "business"
+          ],
+          "label": "NIT"
+        },
+        {
+          "code": "41",
+          "applies": [
+            "personal"
+          ],
+          "label": "Pasaporte"
+        },
+        {
+          "code": "42",
+          "applies": [
+            "personal"
+          ],
+          "label": "Documento de identificación extranjero"
+        },
+        {
+          "code": "50",
+          "applies": [
+            "business"
+          ],
+          "label": "NIT de otro país"
+        },
+        {
+          "code": "91",
+          "applies": [
+            "personal"
+          ],
+          "label": "NUIP"
+        }
+      ]
+    },
+    "responsabilidad": {
+      "label": {
+        "en": "Tax responsibility",
+        "es": "Responsabilidad tributaria"
+      },
+      "source": "DIAN — códigos de responsabilidad, factura electrónica",
+      "verified": "2026-09-02",
+      "options": [
+        {
+          "code": "O-13",
+          "label": "Gran contribuyente"
+        },
+        {
+          "code": "O-15",
+          "label": "Autorretenedor"
+        },
+        {
+          "code": "O-23",
+          "label": "Agente de retención IVA"
+        },
+        {
+          "code": "O-47",
+          "label": "Régimen simple de tributación"
+        },
+        {
+          "code": "R-99-PN",
+          "label": "No responsable"
+        }
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "Factura electrónica DIAN",
+    "note": {
+      "en": "DIAN autofills your name and email from the document type and number since April 2025. Nothing else should be asked of you.",
+      "es": "Desde abril de 2025 la DIAN autocompleta nombre y correo a partir del tipo y número de documento. No deberían pedirte más."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.dian.gov.co/"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "iso": "CL",
+  "tier": 2,
+  "authority": "SII — Servicio de Impuestos Internos",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.sii.cl/"
+  },
+  "identifiers": [
+    {
+      "key": "rut",
+      "label": {
+        "en": "RUT"
+      },
+      "format": "^[0-9]{7,8}[0-9K]$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "cycle": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "map": "sub11-k"
+      },
+      "display": "##.###.###-#"
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "rut",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "rut",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "Boleta / Factura electrónica",
+    "note": {
+      "en": "RUT is asked for by default at most tills."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.sii.cl/"
+  }
+}

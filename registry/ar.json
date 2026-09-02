@@ -1,0 +1,73 @@
+{
+  "iso": "AR",
+  "tier": 2,
+  "authority": "AFIP — Administración Federal de Ingresos Públicos",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.afip.gob.ar/"
+  },
+  "identifiers": [
+    {
+      "key": "cuit",
+      "label": {
+        "en": "CUIT / CUIL"
+      },
+      "format": "^[0-9]{11}$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "weights": [
+          5,
+          4,
+          3,
+          2,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "map": "sub11"
+      },
+      "display": "##-########-#"
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "cuit",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "cuit",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "Factura electrónica AFIP",
+    "note": {
+      "en": "CUIT determines the invoice class you receive."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.afip.gob.ar/"
+  }
+}

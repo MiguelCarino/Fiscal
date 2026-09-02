@@ -1,0 +1,131 @@
+{
+  "iso": "BR",
+  "tier": 2,
+  "authority": "Receita Federal do Brasil",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.gov.br/receitafederal/"
+  },
+  "identifiers": [
+    {
+      "key": "cpf",
+      "label": {
+        "en": "CPF"
+      },
+      "format": "^[0-9]{11}$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "digits": 2,
+        "map": "lt2-zero",
+        "weights": [
+          [
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          [
+            11,
+            10,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ]
+        ]
+      },
+      "display": "###.###.###-##"
+    },
+    {
+      "key": "cnpj",
+      "label": {
+        "en": "CNPJ"
+      },
+      "format": "^[0-9]{14}$",
+      "checksum": {
+        "engine": "mod11-weighted",
+        "digits": 2,
+        "map": "lt2-zero",
+        "weights": [
+          [
+            5,
+            4,
+            3,
+            2,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ],
+          [
+            6,
+            5,
+            4,
+            3,
+            2,
+            9,
+            8,
+            7,
+            6,
+            5,
+            4,
+            3,
+            2
+          ]
+        ]
+      },
+      "display": "##.###.###/####-##"
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "cpf",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "cnpj",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "mandatory",
+    "scheme": "NF-e / NFS-e",
+    "note": {
+      "en": "CPF or CNPJ on the note is routine; ask for it at the till."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.gov.br/receitafederal/"
+  }
+}

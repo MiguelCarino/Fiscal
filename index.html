@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/webp" href="logo.webp">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#050505">
+  <title>Carino Fiscal — your tax identity, offline, in any country</title>
+  <meta name="description" content="An offline card that holds your fiscal identity — personal and business — for every jurisdiction you file in. Check digits validated on device, spelled out phonetically for the counter, and never sent anywhere.">
+
+  <link rel="stylesheet" href="fonts/carino-fonts.css">
+
+  <style>
+    :root{
+      --accent:#eab308; --accent-faint:rgba(234,179,8,0.05); --accent-glow:rgba(234,179,8,0.15);
+      --accent-dim:rgba(234,179,8,0.30); --primary-hover:#fbbf24;
+      --bg:#050505; --bg-elev:#0d0d0d; --bg-card:#0b0b0b;
+      --text:#fff; --text-sec:#a3a3a3; --text-muted:#666;
+      --border:#262626;
+      --ok:#22c55e; --err:#ef4444; --warn:#eab308; --info:#38bdf8;
+      /* One colour per card kind. Business takes the house gold because
+         invoicing is what this tool is mostly for; personal takes the cool
+         counterpart already in the palette. They are category colours, kept
+         subordinate to gold-as-the-interactive-accent: a stripe, a chip and a
+         hover border, never a filled card. */
+      --kind-business:#eab308; --kind-business-soft:rgba(234,179,8,0.09);
+      --kind-personal:#38bdf8; --kind-personal-soft:rgba(56,189,248,0.09);
+      --stage-grad:radial-gradient(1200px 520px at 50% -12%,rgba(234,179,8,0.08) 0%,transparent 60%),
+        linear-gradient(180deg,#0b0b0b 0%,#050505 100%);
+      --gold-text:linear-gradient(130deg,#fef08a 0%,#eab308 50%,#b45309 100%);
+      --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+      --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+      --display:'Red Hat Display',var(--sans);
+      --fs-micro:0.6rem; --fs-label:0.65rem; --fs-btn:0.7rem; --fs-sm:0.8rem;
+      --fs-mono:0.85rem; --fs-sec:0.9rem; --fs-body:1rem; --fs-lg:1.05rem;
+      --fs-h3:1.2rem; --fs-h2:1.5rem; --fs-h1:1.9rem;
+      --radius:10px;
+    }
+    *{box-sizing:border-box;}
+    /* The UA's [hidden] rule is a plain `display:none` and loses to any author
+       `display` declaration — so every .banner{display:flex} or .btn{display:
+       inline-flex} would quietly un-hide an element the script had hidden.
+       Toggle visibility with el.hidden and let this rule win. */
+    [hidden]{display:none!important;}
+    html{scroll-behavior:smooth;}
+    :root{scrollbar-width:thin;scrollbar-color:#3a3a3a transparent;}
+    ::-webkit-scrollbar{width:8px;height:8px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:6px;}
+    ::-webkit-scrollbar-thumb:hover{background:var(--accent-dim);}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+      font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:none;}
+    a:hover{color:var(--primary-hover);}
+    button{font-family:inherit;}
+    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+    .wrap{max-width:900px;margin:0 auto;padding:0 20px 100px;}
+
+    /* ---------- masthead ---------- */
+    /* The navbar already says FISCAL, so the page does not need to shout it
+       again. Counter mode is the product: the hero's job is to stay small and
+       leave the card above the fold. */
+    .mast{border-bottom:1px solid var(--border);margin:0 -20px 26px;
+      padding:26px 20px 20px;display:flex;flex-direction:column;gap:7px;}
+    .mast .lede{margin:0;font-family:var(--display);font-weight:700;
+      font-size:clamp(1.25rem,3.4vw,1.7rem);line-height:1.25;letter-spacing:-0.01em;
+      max-width:34ch;text-wrap:balance;}
+    .mast .sub{margin:0;font-family:var(--mono);font-size:var(--fs-sm);
+      color:var(--text-muted);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+    .mast .sub a{border-bottom:1px solid var(--accent-dim);}
+    .mast .sub a:hover{border-bottom-color:var(--accent);}
+
+    /* ---------- alerts ---------- */
+    .alert{border:1px solid;border-radius:8px;padding:12px 14px;font-family:var(--mono);
+      font-size:var(--fs-sm);line-height:1.5;margin-bottom:14px;}
+    .alert.warn{color:#fcd34d;background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.45);}
+    .alert.err{color:#fca5a5;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.5);}
+
+    /* ---------- pills ---------- */
+    .pill{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;
+      letter-spacing:0.05em;border-radius:999px;padding:3px 10px;border:1px solid;white-space:nowrap;}
+    .pill.t1{color:var(--ok);border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);}
+    .pill.t2{color:var(--accent);border-color:rgba(234,179,8,0.4);background:rgba(234,179,8,0.08);}
+    .pill.t3{color:var(--text-muted);border-color:var(--border);background:var(--bg-elev);}
+
+    /* ---------- buttons ---------- */
+    .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+      font-size:var(--fs-btn);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
+      padding:0 16px;height:38px;border-radius:6px;cursor:pointer;border:1px solid var(--border);
+      background:transparent;color:var(--text-sec);transition:0.18s;}
+    .btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#050505;}
+    .btn-primary:hover{background:var(--primary-hover);color:#050505;box-shadow:0 4px 16px var(--accent-glow);}
+    .btn-ghost{border-color:transparent;}
+    .btn-ghost:hover{border-color:var(--border);background:transparent;color:var(--text);}
+
+    /* ---------- jurisdiction bar ---------- */
+    .jbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      border-bottom:1px solid var(--border);padding-bottom:14px;}
+    .j-flag{font-size:1.7rem;line-height:1;}
+    .j-name{font-family:var(--display);font-weight:800;font-size:var(--fs-h2);
+      text-transform:uppercase;letter-spacing:0.5px;flex:1;min-width:120px;}
+    .j-change{margin-left:auto;}
+    .jauth{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      margin-top:8px;letter-spacing:0.04em;}
+
+    /* ---------- kind tabs ---------- */
+    .kindtabs{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;
+      border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+    .kindtab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;
+      padding:11px 14px;background:var(--bg-elev);border:0;border-right:1px solid var(--border);
+      cursor:pointer;text-align:left;transition:0.18s;}
+    .kindtab:last-child{border-right:0;}
+    .kindtab:hover{background:#141414;}
+    .kindtab.on{background:var(--accent-faint);box-shadow:inset 0 -2px 0 var(--accent);}
+    .kt-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--text-muted);}
+    .kindtab.on .kt-k{color:var(--accent);}
+    .kt-n{font-size:var(--fs-sec);color:var(--text-sec);}
+    .kindtab.on .kt-n{color:var(--text);}
+
+    /* ---------- the card face ---------- */
+    .face{border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px;
+      background:var(--bg-card);padding:22px 20px;display:flex;flex-direction:column;gap:20px;}
+    .f{display:flex;flex-direction:column;gap:5px;}
+    .f-head{display:flex;align-items:baseline;gap:10px;}
+    .f-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.14em;
+      text-transform:uppercase;color:var(--text-muted);flex:1;}
+    .f-copy{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
+      text-transform:uppercase;background:transparent;border:1px solid var(--border);
+      color:var(--text-muted);border-radius:4px;padding:2px 7px;cursor:pointer;transition:0.15s;}
+    .f-copy:hover{border-color:var(--accent);color:var(--accent);}
+    .f-copy.copied{border-color:var(--ok);color:var(--ok);}
+    .f-v{font-family:var(--mono);font-weight:700;font-size:2rem;letter-spacing:0.07em;
+      line-height:1.15;word-break:break-all;}
+    .f-v--sm{font-size:var(--fs-lg);font-weight:500;letter-spacing:0.02em;}
+    .f-badge{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.08em;
+      text-transform:uppercase;}
+    .f-badge.ok{color:var(--ok);} .f-badge.err{color:var(--err);} .f-badge.warn{color:var(--text-muted);}
+    .f-badge.ok::before{content:"✓ ";} .f-badge.err::before{content:"✕ ";}
+    .f-phon{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.5;
+      border-left:2px solid var(--accent-dim);padding-left:10px;margin-top:3px;}
+    .f-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      line-height:1.6;border-top:1px solid var(--border);padding-top:14px;}
+    .qr-open{align-self:flex-start;}
+
+    .banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+    .banner span{flex:1;min-width:200px;}
+
+    /* Tax data goes stale silently; this is the only place the app nags. */
+    .f-stale{font-family:var(--mono);font-size:var(--fs-micro);color:var(--ochre-warn,#fcd34d);
+      border-left:2px solid rgba(234,179,8,0.5);padding-left:10px;line-height:1.6;}
+    .f-einv{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);
+      padding-top:14px;}
+    .einv-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
+      text-transform:uppercase;}
+    .f-einv.mandatory .einv-k{color:var(--accent);}
+    .f-einv.scheduled .einv-k{color:var(--info);}
+    .f-einv.partial .einv-k{color:var(--text-sec);}
+    .f-einv.none .einv-k{color:var(--text-muted);}
+    .einv-d{font-size:var(--fs-sm);color:var(--text-muted);line-height:1.55;}
+
+    /* editor: import block */
+    .ed-import{display:flex;flex-direction:column;gap:7px;margin-bottom:20px;
+      border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--bg-elev);}
+    .ed-import .textarea{min-height:52px;}
+
+    /* share */
+    .shr-tabs{display:flex;gap:6px;margin-bottom:14px;}
+    .shr-tab{flex:1;font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
+      text-transform:uppercase;background:transparent;border:1px solid var(--border);
+      color:var(--text-muted);border-radius:6px;padding:7px 8px;cursor:pointer;transition:0.15s;}
+    .shr-tab:hover{border-color:var(--accent);color:var(--accent);}
+    .shr-tab.on{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
+    #shareQr{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:8px;}
+    #shareQr canvas{display:block;image-rendering:pixelated;}
+    #shareWhat{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      line-height:1.6;margin-top:12px;}
+    .shr-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+    .shr-acts .btn{flex:1;justify-content:center;min-width:130px;}
+    .shr-warn{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      line-height:1.6;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;}
+
+    #bigSpeak{margin-right:8px;}
+
+    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+
+    /* ---------- empty / example ---------- */
+    .empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;}
+    .empty-t{font-family:var(--display);font-weight:700;font-size:var(--fs-h3);}
+    .empty-d{color:var(--text-sec);font-size:var(--fs-sec);max-width:52ch;}
+    .empty .btn{margin-top:6px;}
+    .example{margin-top:20px;border:1px dashed var(--border);border-radius:8px;
+      padding:16px;width:100%;display:flex;flex-direction:column;gap:6px;}
+    .example-tag{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.16em;
+      text-transform:uppercase;color:var(--text-muted);}
+
+    /* ---------- the wall ---------- */
+    .wall{margin-top:4px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));
+      gap:12px;margin-top:18px;}
+    .tile{position:relative;display:flex;flex-direction:column;gap:9px;text-align:left;
+      background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+      padding:17px 16px 14px;cursor:pointer;transition:0.2s;overflow:hidden;
+      color:var(--text);font-family:inherit;}
+    .tile::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+      background:var(--kind);}
+    .tile:hover,.tile:focus-visible{border-color:var(--kind);transform:translateY(-3px);
+      box-shadow:0 14px 28px rgba(0,0,0,0.55);background:linear-gradient(160deg,var(--kind-soft) 0%,var(--bg-card) 60%);}
+    .tile.personal{--kind:var(--kind-personal);--kind-soft:var(--kind-personal-soft);}
+    .tile.business{--kind:var(--kind-business);--kind-soft:var(--kind-business-soft);}
+
+    .t-top{display:flex;align-items:center;gap:8px;}
+    .t-flag{font-size:1.15rem;line-height:1;}
+    .t-country{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.13em;
+      text-transform:uppercase;color:var(--text-muted);flex:1;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;}
+    .t-label{font-family:var(--display);font-weight:700;font-size:var(--fs-lg);
+      line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .t-id{font-family:var(--mono);font-size:var(--fs-mono);color:var(--text-sec);
+      letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .t-foot{display:flex;align-items:center;gap:8px;margin-top:2px;}
+    .t-kind{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--kind);border:1px solid var(--kind);
+      border-radius:999px;padding:2px 8px;opacity:0.85;}
+    .t-warn{margin-left:auto;font-size:var(--fs-micro);color:var(--warn);
+      font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;}
+    .t-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+      background:var(--warn);margin-right:6px;vertical-align:middle;}
+
+    .tile.add{align-items:flex-start;justify-content:center;border-style:dashed;
+      background:transparent;--kind:var(--border);--kind-soft:transparent;min-height:130px;}
+    .tile.add:hover{border-color:var(--accent);--kind:var(--accent);}
+    .tile.add .t-label{color:var(--text-sec);}
+
+    .example-tile{border:1px dashed var(--border);border-radius:12px;padding:16px;
+      display:flex;flex-direction:column;gap:7px;background:transparent;}
+
+    /* ---------- detail popup ---------- */
+    #cardDlg{max-width:520px;}
+    #cardDlg .dlg-head{align-items:flex-start;}
+    .dh{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+    .dh-country{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.13em;
+      text-transform:uppercase;color:var(--text-muted);}
+    .dh-label{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
+      line-height:1.2;overflow:hidden;text-overflow:ellipsis;}
+    #cardDlg[data-kind="personal"]{border-top:3px solid var(--kind-personal);}
+    #cardDlg[data-kind="business"]{border-top:3px solid var(--kind-business);}
+    .detail-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center;}
+    #detailFields{display:flex;flex-direction:column;gap:20px;}
+    .detail-addr{margin-top:20px;border-top:1px solid var(--border);padding-top:14px;
+      display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+    .detail-addr .da-k{font-family:var(--mono);font-size:var(--fs-micro);
+      letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);width:100%;}
+    .detail-addr code{flex:1;min-width:150px;font-family:var(--mono);font-size:var(--fs-sm);
+      color:var(--accent);background:var(--bg-elev);border:1px solid var(--border);
+      border-radius:6px;padding:7px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    /* Actions stay out of the scrolling body: Counter mode is the reason the
+       popup is open, and it must never be below the fold. */
+    .detail-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:stretch;}
+    /* Let the row wrap to a second line rather than wrapping the label inside
+       a button — "Counter mode" on two lines reads as a mistake. */
+    .detail-acts .btn{flex:1;justify-content:center;min-width:112px;white-space:nowrap;}
+    #cardDlg .dlg-body{max-height:min(58vh,520px);}
+
+    /* ---------- manage ---------- */
+    .manage{margin-top:52px;}
+    .panel-header{display:flex;justify-content:space-between;align-items:flex-end;
+      border-bottom:1px solid var(--border);padding-bottom:14px;gap:14px;flex-wrap:wrap;}
+    .panel-title{font-family:var(--display);font-weight:900;font-size:var(--fs-h1);
+      text-transform:uppercase;letter-spacing:1px;}
+    .panel-desc{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-sec);margin-top:6px;}
+    .crows{display:flex;flex-direction:column;margin-top:6px;}
+    .crow{display:flex;align-items:center;gap:12px;padding:12px 4px;background:transparent;
+      border:0;border-bottom:1px solid var(--border);cursor:pointer;text-align:left;
+      color:var(--text);transition:0.15s;}
+    .crow:hover{background:var(--accent-faint);}
+    .c-flag{font-size:1.2rem;}
+    .c-name{flex:1;font-size:var(--fs-sec);}
+    .c-kind{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--text-muted);}
+    .c-iso{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);}
+
+    .privacy{margin-top:34px;border-top:1px solid var(--border);padding-top:20px;
+      font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);line-height:1.75;}
+    .privacy b{color:var(--text-sec);font-weight:600;}
+    .privacy .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+    .privacy .row::before{content:"—";color:var(--accent);}
+    .privacy .tools{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
+
+    /* ---------- dialogs ---------- */
+    dialog{background:var(--bg-card);color:var(--text);border:1px solid var(--border);
+      border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);
+      box-shadow:0 24px 60px rgba(0,0,0,0.7);}
+    dialog::backdrop{background:rgba(0,0,0,0.72);}
+    .dlg-head{display:flex;align-items:center;gap:12px;padding:16px 18px;
+      border-bottom:1px solid var(--border);}
+    .dlg-title{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
+      text-transform:uppercase;letter-spacing:0.5px;flex:1;}
+    .dlg-x{background:transparent;border:1px solid var(--border);color:var(--text-muted);
+      border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:1rem;line-height:1;}
+    .dlg-x:hover{border-color:var(--accent);color:var(--accent);}
+    .dlg-body{padding:18px;max-height:min(68vh,620px);overflow-y:auto;}
+    .dlg-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;
+      border-top:1px solid var(--border);}
+    .dlg-foot .left{margin-right:auto;}
+
+    .input,.select,.textarea{background:var(--bg-elev);border:1px solid var(--border);
+      border-radius:6px;color:var(--text);font-family:var(--mono);font-size:var(--fs-sm);
+      padding:9px 11px;width:100%;transition:0.15s;}
+    .input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--accent);
+      box-shadow:0 0 0 3px var(--accent-faint);}
+    .textarea{resize:vertical;min-height:70px;}
+    .select option{background:#111;}
+
+    .ed-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .ed-k{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--text-muted);}
+    .ed-hint{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.06em;
+      text-transform:uppercase;color:var(--text-muted);min-height:12px;}
+    .ed-hint.ok{color:var(--ok);} .ed-hint.err{color:var(--err);} .ed-hint.warn{color:var(--text-muted);}
+    .ed-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);line-height:1.6;}
+    .ed-link{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:0.1em;}
+    .refused{border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.06);
+      border-radius:8px;padding:12px 14px;margin-bottom:16px;}
+    .refused-t{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+      text-transform:uppercase;color:#fca5a5;margin-bottom:6px;}
+    .refused-d{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.6;}
+
+    /* picker */
+    .prow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;
+      background:transparent;border:0;border-bottom:1px solid var(--border);cursor:pointer;
+      color:var(--text);text-align:left;transition:0.12s;}
+    .prow:hover{background:var(--accent-faint);}
+    .prow.on{background:var(--accent-faint);box-shadow:inset 2px 0 0 var(--accent);}
+    .p-flag{font-size:1.15rem;}
+    .p-name{flex:1;font-size:var(--fs-sec);}
+    .p-own{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
+      text-transform:uppercase;letter-spacing:0.1em;}
+    #pickerCount{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      padding:10px 2px 0;letter-spacing:0.08em;text-transform:uppercase;}
+
+    /* counter mode */
+    #bigDlg{max-width:none;width:100vw;height:100vh;max-height:100vh;border:0;border-radius:0;}
+    #bigDlg .dlg-body{max-height:none;height:calc(100vh - 62px);padding:24px;
+      display:flex;flex-direction:column;justify-content:center;}
+    /* min-width:0 throughout: a flex item defaults to min-width:auto and so
+       refuses to shrink below its content, which would let a long identifier
+       push the card wider than the screen instead of being scaled down. */
+    #bigFace{display:flex;flex-direction:column;gap:26px;width:100%;min-width:0;}
+    #bigFace .f,#bigFace .f-v{min-width:0;}
+    #bigFace .f-v{font-size:clamp(2.2rem,11vw,4.4rem);letter-spacing:0.08em;}
+    /* size is measured and set by fitLead() in js/app.js */
+    #bigFace .f-v--fit{white-space:nowrap;word-break:normal;overflow:hidden;}
+    #bigFace .f-v--sm{font-size:clamp(1.1rem,4.5vw,1.7rem);}
+    #bigFace .f-phon{font-size:clamp(0.85rem,3vw,1.05rem);}
+    #bigFace .f-k{font-size:var(--fs-label);}
+    .big-head{display:flex;flex-direction:column;gap:2px;flex:1;}
+    .big-country{font-family:var(--display);font-weight:900;font-size:var(--fs-h3);
+      text-transform:uppercase;letter-spacing:1px;}
+    .big-label{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
+      text-transform:uppercase;letter-spacing:0.14em;}
+
+    #qrDlg .dlg-body{display:flex;justify-content:center;background:#fff;}
+    #qrImg{max-width:100%;height:auto;image-rendering:pixelated;}
+
+    @media(max-width:520px){
+      .wrap{padding:0 14px 80px;}
+      .f-v{font-size:1.6rem;}
+      .actions .btn{flex:1;justify-content:center;}
+    }
+
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+
+    /* ---------- print: a wallet card, nothing else ---------- */
+    @media print{
+      body{background:#fff;color:#000;}
+      #carinoNav,.mast,.manage,.actions,.kindtabs,.j-change,.f-copy,dialog,.alert{display:none!important;}
+      .wrap{padding:0;max-width:none;}
+      .jbar{border-bottom:2px solid #000;}
+      .j-name{color:#000;}
+      .face{border:1px solid #000;background:#fff;color:#000;border-radius:0;}
+      .f-k,.f-badge,.f-note{color:#333;}
+      .f-phon{color:#000;border-left:2px solid #000;}
+      .pill{border-color:#000;color:#000;background:none;}
+    }
+  </style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <header class="mast">
+    <p class="lede" data-i18n>Your tax numbers for every country, ready to read out at the counter.</p>
+    <p class="sub">
+      <span data-i18n>Works offline. Nothing leaves this device.</span>
+      <a href="#demo" id="demoLink" data-i18n>See it with sample cards</a>
+    </p>
+  </header>
+
+  <div class="alert err" id="loadError" hidden data-i18n>The registry failed to load. Serve this folder over http:// rather than opening the file directly, or check that the registry/ directory is intact.</div>
+  <div class="alert warn" id="storageWarn" hidden data-i18n>This browser is not letting the page store anything, so cards will disappear when you reload. A private window or blocked site data is the usual cause.</div>
+  <div class="alert warn banner" id="demoBanner" hidden>
+    <span data-i18n>Sample cards. Every number is invented but passes its country's real check-digit rule. Nothing here is saved.</span>
+    <button class="btn btn-ghost" id="demoExit" data-i18n>Leave samples</button>
+  </div>
+  <div class="alert warn banner" id="sharedBanner" hidden>
+    <span data-i18n>A card from a shared link. It is only being shown — nothing has been saved to this device.</span>
+    <button class="btn" id="sharedAdd" data-i18n>Keep this card</button>
+  </div>
+
+  <section class="wall">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title" data-i18n>Your cards</div>
+        <div class="panel-desc" id="cardCount"></div>
+      </div>
+      <button class="btn btn-primary" id="addCard" data-i18n>Add card</button>
+    </div>
+    <div class="grid" id="cardGrid"></div>
+  </section>
+
+  <section class="manage">
+    <div class="privacy">
+      <div class="row"><span data-i18n>This page makes no network requests once it has loaded. No analytics, no sync, no account, no error reporting — nothing to opt out of, because nothing is sent.</span></div>
+      <div class="row"><span data-i18n>Cards live in this browser, on this device only. Clearing site data deletes them, and no other device or browser can see them.</span></div>
+      <div class="row"><span data-i18n>Some numbers are refused outright. A US Social Security Number and a Japanese My Number are never stored — the card editor explains why and what to use instead.</span></div>
+      <div class="row"><span><b data-i18n>Coverage:</b> <span data-i18n>every ISO 3166 jurisdiction is present —</span> <span id="jurisdictionTotal">249</span> <span data-i18n>in all. Three are verified against their authority, eighteen carry published structure, and the rest store and present without validating. Each card says which.</span></span></div>
+      <div class="tools">
+        <button class="btn btn-ghost" id="exportBtn" data-i18n>Copy a backup</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- jurisdiction picker -->
+<dialog id="pickerDlg">
+  <div class="dlg-head">
+    <span class="dlg-title" data-i18n>Jurisdiction</span>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <input class="input" id="pickerSearch" type="search" placeholder="Search 249 jurisdictions" data-i18n-ph>
+    <div id="pickerCount"></div>
+    <div id="pickerList"></div>
+  </div>
+</dialog>
+
+<!-- card editor -->
+<dialog id="editDlg">
+  <div class="dlg-head">
+    <span class="dlg-title" id="editTitle"></span>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body"><div id="editForm"></div></div>
+  <div class="dlg-foot">
+    <button class="btn btn-ghost left" id="editDelete" data-i18n>Delete</button>
+    <button class="btn" data-close data-i18n>Cancel</button>
+    <button class="btn btn-primary" id="editSave" data-i18n>Save</button>
+  </div>
+</dialog>
+
+<!-- counter mode -->
+<dialog id="bigDlg">
+  <div class="dlg-head">
+    <div class="big-head">
+      <span class="big-country" id="bigCountry"></span>
+      <span class="big-label" id="bigLabel"></span>
+    </div>
+    <button class="btn" id="bigSpeak" hidden data-i18n>Speak it</button>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body"><div id="bigFace"></div></div>
+</dialog>
+
+<!-- card detail -->
+<dialog id="cardDlg">
+  <div class="dlg-head">
+    <div class="dh">
+      <span class="dh-country" id="detailCountry"></span>
+      <span class="dh-label" id="detailLabel"></span>
+    </div>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <div class="detail-meta" id="detailMeta"></div>
+    <div id="detailFields"></div>
+    <div class="detail-addr">
+      <span class="da-k" data-i18n>This card's address on this device</span>
+      <code id="detailAddr"></code>
+      <button class="btn btn-ghost" id="detailAddrCopy" data-i18n>Copy</button>
+    </div>
+  </div>
+  <div class="dlg-foot detail-acts" id="detailActions"></div>
+</dialog>
+
+<!-- share -->
+<dialog id="shareDlg">
+  <div class="dlg-head">
+    <span class="dlg-title" data-i18n>Share this card</span>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <div class="shr-tabs" id="shareTabs">
+      <button class="shr-tab on" data-payload="vcard" data-i18n>vCard</button>
+      <button class="shr-tab" data-payload="link" data-i18n>Link</button>
+      <button class="shr-tab" data-payload="carino" data-i18n>Carino payload</button>
+    </div>
+    <div id="shareQr"></div>
+    <div id="shareWhat"></div>
+    <div class="shr-acts">
+      <button class="btn btn-primary" id="shareImage" data-i18n>Save as image</button>
+      <button class="btn" id="shareLink" data-i18n>Copy link</button>
+      <button class="btn" id="shareQuote" data-i18n>Send to Quote</button>
+    </div>
+    <div class="shr-warn" data-i18n>The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.</div>
+  </div>
+</dialog>
+
+<!-- official QR -->
+<dialog id="qrDlg">
+  <div class="dlg-head">
+    <span class="dlg-title" data-i18n>Official QR</span>
+    <button class="dlg-x" data-close aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body"><img id="qrImg" alt=""></div>
+</dialog>
+
+<script src="carino-navbar.js" data-app="Fiscal" data-repo="Fiscal" defer></script>
+<script src="carino-lang.js" defer></script>
+<script src="vendor/qrcode-generator-1.4.4.js" defer></script>
+<script src="carino-bridge.js" defer></script>
+<script src="js/engines.js" defer></script>
+<script src="js/phonetic.js" defer></script>
+<script src="js/store.js" defer></script>
+<script src="js/import.js" defer></script>
+<script src="js/share.js" defer></script>
+<script src="i18n.js" defer></script>
+<script src="js/app.js" defer></script>
+<script>
+  // Offline is the whole premise, so the service worker is not an enhancement.
+  // Registration is guarded: opened from file:// it simply does not run.
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache is best-effort */ });
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "iso": "CA",
+  "tier": 2,
+  "authority": "Canada Revenue Agency",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.canada.ca/en/revenue-agency.html"
+  },
+  "identifiers": [
+    {
+      "key": "bn",
+      "label": {
+        "en": "Business Number"
+      },
+      "format": "^[0-9]{9}(RT[0-9]{4})?$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "bn",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "bn",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "none",
+    "scheme": null,
+    "note": {
+      "en": "No e-invoicing mandate. The Business Number appears on the supplier's side of a GST/HST invoice."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.canada.ca/en/revenue-agency.html"
+  }
+}

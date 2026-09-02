@@ -1,0 +1,15 @@
+{
+  "name": "Carino Fiscal",
+  "short_name": "Fiscal",
+  "description": "Your tax identity, personal and business, for every jurisdiction you file in. Offline, on-device, never transmitted.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    { "src": "logo.webp", "sizes": "512x512", "type": "image/webp", "purpose": "any" }
+  ]
+}

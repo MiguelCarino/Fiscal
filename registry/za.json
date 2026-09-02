@@ -1,0 +1,75 @@
+{
+  "iso": "ZA",
+  "tier": 2,
+  "authority": "SARS — South African Revenue Service",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.sars.gov.za/"
+  },
+  "identifiers": [
+    {
+      "key": "vat",
+      "label": {
+        "en": "VAT number"
+      },
+      "format": "^4[0-9]{9}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    },
+    {
+      "key": "taxRef",
+      "label": {
+        "en": "Income tax reference"
+      },
+      "format": "^[0-9]{10}$",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "vat",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "vat",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "none",
+    "scheme": null,
+    "note": {
+      "en": "No e-invoicing mandate. A VAT number is needed on a tax invoice above the threshold."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.sars.gov.za/"
+  }
+}

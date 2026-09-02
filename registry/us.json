@@ -1,0 +1,122 @@
+{
+  "iso": "US",
+  "tier": 1,
+  "authority": "IRS — Internal Revenue Service",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://www.irs.gov/businesses/small-businesses-self-employed/employer-id-numbers",
+    "note": "Identity only. A US retail receipt never carries the buyer's tax ID — what actually changes hands at a counter is a state resale or exemption certificate, which is a per-state document the SELLER keeps on file. That is deliberately out of scope for now; the certificateProfile slot below is reserved and unused."
+  },
+  "identifiers": [
+    {
+      "key": "ein",
+      "label": {
+        "en": "EIN",
+        "es": "EIN"
+      },
+      "format": "^[0-9]{9}$",
+      "display": "##-#######",
+      "checksum": {
+        "engine": "structural"
+      },
+      "note": {
+        "en": "Format only, on purpose. The IRS campus prefix list has changed repeatedly and is not published as a stable machine-readable set, so validating against a copy of it would reject legitimate numbers.",
+        "es": "Solo formato, a propósito. La lista de prefijos del IRS ha cambiado varias veces y no se publica de forma estable, así que validarla rechazaría números legítimos."
+      }
+    },
+    {
+      "key": "itin",
+      "label": {
+        "en": "ITIN",
+        "es": "ITIN"
+      },
+      "format": "^9[0-9]{8}$",
+      "display": "9##-##-####",
+      "checksum": {
+        "engine": "structural"
+      },
+      "optional": true
+    }
+  ],
+  "refused": [
+    {
+      "key": "ssn",
+      "label": {
+        "en": "Social Security Number",
+        "es": "Número de Seguro Social"
+      },
+      "reason": {
+        "en": "This app will not store an SSN. It is the single most damaging number to lose, it is not what a counter needs, and an EIN does the same job for every business purpose. Use the EIN.",
+        "es": "Esta app no guarda un SSN. Es el número más dañino que se puede perder, no es lo que pide un mostrador, y el EIN cumple la misma función para cualquier fin empresarial. Usa el EIN."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "legalName",
+        "address"
+      ],
+      "optional": [
+        "itin",
+        "email"
+      ]
+    },
+    "business": {
+      "required": [
+        "ein",
+        "legalName",
+        "address"
+      ],
+      "optional": [
+        "email",
+        "stateOfFormation"
+      ]
+    }
+  },
+  "fields": {
+    "legalName": {
+      "label": {
+        "en": "Legal name",
+        "es": "Nombre legal"
+      }
+    },
+    "address": {
+      "label": {
+        "en": "Address",
+        "es": "Dirección"
+      },
+      "multiline": true
+    },
+    "stateOfFormation": {
+      "label": {
+        "en": "State of formation",
+        "es": "Estado de constitución"
+      }
+    },
+    "email": {
+      "label": {
+        "en": "Email",
+        "es": "Correo"
+      }
+    }
+  },
+  "certificateProfile": null,
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "none",
+    "scheme": null,
+    "note": {
+      "en": "No e-invoicing mandate and no buyer tax ID on retail receipts. What changes hands at a counter is a state exemption certificate, if anything.",
+      "es": "Sin obligación de factura electrónica ni identificación fiscal del comprador en recibos. Lo que se entrega en mostrador, si acaso, es un certificado estatal de exención."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.irs.gov/"
+  }
+}

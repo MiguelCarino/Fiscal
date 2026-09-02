@@ -1,0 +1,63 @@
+{
+  "iso": "AU",
+  "tier": 2,
+  "authority": "ATO — Australian Taxation Office",
+  "verified": {
+    "on": "2026-09-02",
+    "src": "https://abr.business.gov.au/"
+  },
+  "identifiers": [
+    {
+      "key": "abn",
+      "label": {
+        "en": "ABN"
+      },
+      "format": "^[0-9]{11}$",
+      "checksum": {
+        "engine": "mod89"
+      },
+      "display": "## ### ### ###",
+      "note": {
+        "en": "The whole weighted sum must divide by 89 — there is no single check digit to report back, so a failure says only that the number is not a valid ABN."
+      }
+    }
+  ],
+  "invoiceProfile": {
+    "personal": {
+      "required": [
+        "abn",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    },
+    "business": {
+      "required": [
+        "abn",
+        "legalName"
+      ],
+      "optional": [
+        "email",
+        "address"
+      ]
+    }
+  },
+  "delivery": [
+    "counter",
+    "phonetic",
+    "copy",
+    "share",
+    "print"
+  ],
+  "einvoicing": {
+    "status": "partial",
+    "scheme": "Peppol (eInvoicing)",
+    "note": {
+      "en": "Peppol eInvoicing is government-backed; an ABN on the tax invoice is what matters at the counter."
+    },
+    "verified": "2026-09-02",
+    "src": "https://www.ato.gov.au/"
+  }
+}
