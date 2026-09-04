@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "SARS — South African Revenue Service",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.sars.gov.za/"
+    "on": "2026-09-03",
+    "src": "https://www.sars.gov.za/wp-content/uploads/Docs/PAYE/BRS/SARS_PAYE_BRS-PAYE-Employer-Reconciliation_V25-1-0.pdf",
+    "note": "SARS's own PAYE Employer Reconciliation BRS, marked for public release, and the only SARS publication that prints a check algorithm. §8.1 “Modulus 10 check on Income Tax Number” gives the rule and two worked examples for the ten-digit income tax reference number. READ THE SCOPE CAREFULLY: this document covers the income tax number and, separately at §8.2, PAYE/SDL/UIF references — where “the first digit must be replaced with a 4”. It says nothing whatever about VAT registration numbers, so it must not be cited as evidence for one."
   },
   "identifiers": [
     {
@@ -13,12 +14,16 @@
         "en": "VAT number"
       },
       "format": "^4[0-9]{9}$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "unimplemented"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "Structure is checked. This record used to say SARS applies a modulus 10 to the VAT number; the cited BRS shows where that belief comes from and does not support it — §8.2's “the first digit must be replaced with a 4” is the PAYE/SDL/UIF rule, not a VAT one, and the leading 4 this format requires is a coincidence of shape. SARS publishes no check rule for VAT registration numbers anywhere this build could find, so the engine stays unimplemented rather than borrowing one that was written for a different number. Confirm against your VAT 103 notice."
+      },
+      "denied": [
+        "4000000000"
+      ]
     },
     {
       "key": "taxRef",
@@ -26,21 +31,23 @@
         "en": "Income tax reference"
       },
       "format": "^[0-9]{10}$",
+      "scope": "both",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "Structure only, and that is now a gap rather than a limit. This record used to say SARS publishes no check-digit rule for the income tax reference number — it does: §8.1 of the cited BRS, “Modulus 10 check on Income Tax Number”, gives a Luhn over the first nine digits with two worked examples (0001339050 and 0667056642). Implementing it needs an engine and fixtures, so it is written down here rather than half-done, and the badge still says format only because that is what runs."
       }
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "vat",
+        "taxRef",
         "legalName"
       ],
       "optional": [
+        "vat",
         "email",
         "address"
       ]

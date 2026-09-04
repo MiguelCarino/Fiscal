@@ -1,32 +1,48 @@
 {
-  "iso": "GR",
+  "iso": "PL",
   "tier": 2,
-  "authority": "ΑΑΔΕ — Independent Authority for Public Revenue",
+  "authority": "KAS — Krajowa Administracja Skarbowa",
   "verified": {
-    "on": "2026-09-03",
-    "src": "https://diavgeia.gov.gr/doc/%CE%A8%CE%9A%CE%A5%CE%A646%CE%9C%CE%A03%CE%96-%CE%A5%CE%A4%CE%93",
-    "note": "The AADE Governor's decision Α.1181/2025, served as its signed PDF from Δι@ύγεια, the Greek State's statutory portal for public acts. §4 publishes the shape — “Ο ΑΦΜ περιλαμβάνει εννέα (9) αριθμητικά ψηφία” — and §5 the allocation ranges by leading digit. AADE publishes no check rule anywhere reachable, so the powers-of-two weighting this engine uses is conventional and uncited; the decision neither confirms nor denies it."
+    "on": "2026-09-02",
+    "src": "https://www.podatki.gov.pl/nip/informacje-podstawowe-nip/"
   },
   "identifiers": [
     {
-      "key": "afm",
+      "key": "nip",
       "label": {
-        "en": "ΑΦΜ (AFM)"
+        "en": "NIP"
       },
-      "format": "^[0-9]{9}$",
+      "format": "^(PL)?[0-9]{10}$",
       "scope": "both",
       "checksum": {
-        "engine": "pow2-weighted"
+        "engine": "mod11-weighted",
+        "weights": [
+          6,
+          5,
+          7,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "map": "nip"
       },
       "denied": [
-        "000000000"
-      ]
+        "0000000000",
+        "PL0000000000"
+      ],
+      "display": "###-###-##-##",
+      "note": {
+        "en": "The tenth digit is the weighted sum of the nine before it taken modulo 11. A remainder of 10 cannot be written as one digit, so no NIP produces it."
+      }
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "afm",
+        "nip",
         "legalName"
       ],
       "optional": [
@@ -36,7 +52,7 @@
     },
     "business": {
       "required": [
-        "afm",
+        "nip",
         "legalName"
       ],
       "optional": [
@@ -54,8 +70,8 @@
     "print"
   ],
   "peppol": {
-    "eas": "9933",
-    "scheme": "Greek VAT number",
+    "eas": "9945",
+    "scheme": "Poland VAT number",
     "label": {
       "en": "Peppol address",
       "es": "Dirección Peppol"
@@ -76,12 +92,14 @@
     }
   },
   "einvoicing": {
-    "status": "partial",
-    "scheme": "myDATA / EN 16931",
+    "status": "mandatory",
+    "scheme": "KSeF 2.0",
     "note": {
-      "en": "The B2B phase-in has begun, largest turnover band first. This record carries no commencement date because none in it was sourced to a published AADE decision — confirm which band applies to you before relying on a date."
+      "en": "KSeF has been mandatory for large taxpayers and for receiving invoices since February 2026 and for everyone else since April 2026. The smallest sellers, invoicing no more than PLN 10,000 a month, join in January 2027."
     },
     "verified": "2026-09-02",
-    "src": "https://www.aade.gr/"
+    "src": "https://www.ksef.podatki.gov.pl/etapy-wdrozenia-ksef",
+    "from": "2026-02-01",
+    "fullyFrom": "2027-01-01"
   }
 }

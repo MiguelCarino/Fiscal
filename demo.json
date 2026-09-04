@@ -8,6 +8,13 @@
     "red would teach the opposite of what the app does. The names are deliberately",
     "obvious ('DEMO', 'EJEMPLO') so nothing here can be mistaken for a real entity.",
     "",
+    "Numbers are grouped the way the authority prints them wherever the grouping",
+    "carries meaning. Nine bare digits are the one shape in which an SSN and an",
+    "EIN are the same string, so the EIN keeps its 2-7 hyphen beside the promise",
+    "that this app refuses one; and a Colombian NIT written run together is a",
+    "body and its verification digit or a body still missing one, so the demo",
+    "writes the digit apart, which is also the only way the rule gets run.",
+    "",
     "Check digits solved with js/engines.js — see tools/validate.py for the gate."
   ],
   "cards": [
@@ -37,7 +44,7 @@
       "verifiedOn": "2026-09-02",
       "values": {
         "tipoDocumento": "31",
-        "nit": "9001234568",
+        "nit": "900123456-8",
         "razonSocial": "DEMO COLOMBIA SAS",
         "email": "demo@example.co",
         "responsabilidad": "R-99-PN"
@@ -47,7 +54,7 @@
       "iso": "US", "kind": "business", "label": "Demo Systems LLC",
       "verifiedOn": "2026-09-02",
       "values": {
-        "ein": "123456789",
+        "ein": "88-1234567",
         "legalName": "DEMO SYSTEMS LLC",
         "address": "100 Example Street, Wilmington, DE 19801"
       }
@@ -65,9 +72,9 @@
       "iso": "FR", "kind": "business", "label": "Démo France SARL",
       "verifiedOn": "2026-09-02",
       "values": {
-        "siren": "123456789",
+        "siren": "123456782",
         "legalName": "DEMO FRANCE SARL",
-        "peppolId": "123456789",
+        "peppolId": "123456782",
         "email": "demo@example.fr"
       }
     },
@@ -75,6 +82,7 @@
       "iso": "JP", "kind": "business", "label": "デモ株式会社",
       "verifiedOn": "2026-09-02",
       "values": {
+        "registrationNumber": "T7123456789012",
         "corporateNumber": "7123456789012",
         "legalName": "デモ株式会社",
         "email": "demo@example.jp"

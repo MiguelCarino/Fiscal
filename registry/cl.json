@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "SII — Servicio de Impuestos Internos",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.sii.cl/"
+    "on": "2026-09-03",
+    "src": "https://www.sii.cl/normativa_legislacion/resoluciones/2018/reso8_anexo1.pdf",
+    "note": "Anexo N°1 to an SII Resolución Exenta, on the authority's own normativa path. Its field table is the SII naming the parts in its own normative annex — a numeric RUT body and a separate one-character dígito verificador, checked by “Módulo 11… en caso de ser «K», siempre debe ser mayúscula”. It names the modulus and the K case and stops there: the weight series this engine uses is nowhere on sii.cl, so the engine's parameters are conventional, not cited."
   },
   "identifiers": [
     {
@@ -13,6 +14,7 @@
         "en": "RUT"
       },
       "format": "^[0-9]{7,8}[0-9K]$",
+      "scope": "both",
       "checksum": {
         "engine": "mod11-weighted",
         "cycle": [
@@ -23,7 +25,18 @@
           6,
           7
         ],
-        "map": "sub11-k"
+        "map": "sub11-k",
+        "bodyLengths": [
+          7,
+          8
+        ]
+      },
+      "denied": [
+        "00000000",
+        "000000000"
+      ],
+      "note": {
+        "en": "The verification digit is the last character and the body is 7 or 8 digits, so written without the hyphen an eight-character value is a seven-digit body and its digit or an eight-digit body still missing one; write it 12.345.678-5 and the boundary is stated. Until it is stated the rule is not run and the badge says so, because one incomplete value in ten satisfies the modulus by coincidence and a green badge on it would be worse than no badge. Only the all-zero forms are denied. 11.111.111-1 and its siblings satisfy the modulus 11 the same way a repeated-digit CPF does, but the SII issues serials in those ranges, so refusing them would tell a real holder their real RUT is invalid."
       },
       "display": "##.###.###-#"
     }

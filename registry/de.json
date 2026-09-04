@@ -4,7 +4,7 @@
   "authority": "Bundeszentralamt für Steuern",
   "verified": {
     "on": "2026-09-02",
-    "src": "https://www.bzst.de/"
+    "src": "https://www.bzst.de/DE/Unternehmen/Identifikationsnummern/Umsatzsteuer-Identifikationsnummer/umsatzsteuer-identifikationsnummer_node.html"
   },
   "identifiers": [
     {
@@ -13,12 +13,18 @@
         "en": "USt-IdNr."
       },
       "format": "^DE[0-9]{9}$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "iso7064-11-10",
+        "length": 9
       },
+      "denied": [
+        "DE000000003"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "The ninth digit closes an ISO 7064 MOD 11,10 run over the eight before it, which is the rule the BZSt publishes for the USt-IdNr. A serial of zeros closes that run too, so the zero number is denied by name."
+      },
+      "display": "DE #########"
     },
     {
       "key": "steuernummer",
@@ -26,21 +32,23 @@
         "en": "Steuernummer"
       },
       "format": "^[0-9]{10,13}$",
+      "scope": "both",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "Structure only. The Steuernummer is issued by the Land's tax office in its own numbering, and no national check-digit rule is published for it, so the format is the whole of what can be checked."
       }
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "ustIdNr",
+        "steuernummer",
         "legalName"
       ],
       "optional": [
+        "ustIdNr",
         "email",
         "address"
       ]
@@ -90,9 +98,11 @@
     "status": "partial",
     "scheme": "EN 16931",
     "note": {
-      "en": "All businesses must be able to receive structured e-invoices; issuing obligations phase in."
+      "en": "Every business has had to be able to RECEIVE structured e-invoices since January 2025. Issuing becomes mandatory in January 2027 above EUR 800,000 of prior-year turnover and in January 2028 for everyone else."
     },
     "verified": "2026-09-02",
-    "src": "https://www.bzst.de/"
+    "src": "https://www.bzst.de/",
+    "from": "2025-01-01",
+    "fullyFrom": "2028-01-01"
   }
 }

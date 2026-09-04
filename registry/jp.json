@@ -4,20 +4,85 @@
   "authority": "国税庁 — National Tax Agency",
   "verified": {
     "on": "2026-09-02",
-    "src": "https://www.houjin-bangou.nta.go.jp/"
+    "src": "https://www.nta.go.jp/taxes/shiraberu/zeimokubetsu/shohi/keigenzeiritsu/invoice.htm"
   },
   "identifiers": [
+    {
+      "key": "registrationNumber",
+      "label": {
+        "en": "登録番号 (invoice registration number)",
+        "ja": "登録番号"
+      },
+      "format": "^T[0-9]{13}$",
+      "refuses": [
+        {
+          "key": "myNumber",
+          "pattern": "^[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}$"
+        }
+      ],
+      "scope": "business",
+      "checksum": {
+        "engine": "mod9"
+      },
+      "denied": [
+        "T9000000000000",
+        "T9999999999999"
+      ],
+      "display": "T#############",
+      "note": {
+        "en": "This is the number that goes on the invoice. A corporation's is T plus its 法人番号, so it carries that number's leading check digit and is verified here. The corporate numbers the Agency never issued are denied here too, since T plus one of them is not a registration number either.",
+        "ja": "インボイスに記載するのはこの番号です。法人の場合は「T」＋法人番号なので、法人番号の先頭のチェックディジットをそのまま検証できます。国税庁が付番していない法人番号は、頭に「T」を付けても登録番号にはならないので、ここでも拒否します。"
+      }
+    },
+    {
+      "key": "registrationNumberIndividual",
+      "label": {
+        "en": "登録番号 (invoice registration number)",
+        "ja": "登録番号"
+      },
+      "format": "^T[0-9]{13}$",
+      "refuses": [
+        {
+          "key": "myNumber",
+          "pattern": "^[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}$"
+        }
+      ],
+      "scope": "personal",
+      "checksum": {
+        "engine": "structural"
+      },
+      "denied": [
+        "T0000000000000"
+      ],
+      "display": "T#############",
+      "note": {
+        "en": "Structure only. A sole proprietor is issued a thirteen-digit number of their own rather than a 法人番号, and the National Tax Agency publishes no check-digit rule for it, so the format is the whole of what can be checked.",
+        "ja": "書式のみ。個人事業者には法人番号ではなく独自の13桁が付番され、国税庁はその検査規則を公表していないため、確認できるのは書式だけです。"
+      }
+    },
     {
       "key": "corporateNumber",
       "label": {
         "en": "法人番号 (Corporate Number)"
       },
       "format": "^[0-9]{13}$",
+      "refuses": [
+        {
+          "key": "myNumber",
+          "pattern": "^[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}([\\s./\\u2010-\\u2015\\u2212-]{1,3})?[0-9]{4}$"
+        }
+      ],
+      "scope": "business",
       "checksum": {
         "engine": "mod9"
       },
+      "denied": [
+        "9000000000000",
+        "9999999999999"
+      ],
       "note": {
-        "en": "The check digit LEADS the 12-digit commercial registration number rather than trailing it, which is why a corporate number never begins with 0."
+        "en": "The check digit LEADS the 12-digit commercial registration number rather than trailing it, which is why a corporate number never begins with 0. It is not the number that goes on an invoice — that is the registration number, which is T plus this one. A registration number of zeros forces that leading digit to 9, which is why 9000000000000 is denied by name rather than caught by arithmetic.",
+        "ja": "チェックディジットは12桁の商業登記番号の末尾ではなく先頭に付きます。だから法人番号は0で始まりません。インボイスに書くのはこの番号ではなく、頭に「T」を付けた登録番号です。登記番号がすべて0だと先頭の数字は必ず9になるため、9000000000000は計算ではなく名指しで拒否します。"
       }
     }
   ],
@@ -27,18 +92,21 @@
         "legalName"
       ],
       "optional": [
+        "registrationNumberIndividual",
         "email",
         "address"
       ]
     },
     "business": {
       "required": [
-        "corporateNumber",
+        "registrationNumber",
         "legalName"
       ],
       "optional": [
+        "corporateNumber",
         "email",
-        "address"
+        "address",
+        "peppolId"
       ]
     }
   },
@@ -62,13 +130,35 @@
     }
   ],
   "einvoicing": {
-    "status": "mandatory",
-    "scheme": "適格請求書 (qualified invoice)",
+    "status": "none",
+    "scheme": null,
     "note": {
-      "en": "Under the invoice system a registered number on the invoice is what preserves the purchaser's credit.",
-      "ja": "インボイス制度では、登録番号の記載が仕入税額控除の前提になります。"
+      "en": "No e-invoicing mandate. Under the invoice system a qualified invoice may be paper or electronic; what matters is that it carries the seller's registration number and that the purchaser keeps it to claim the input credit. Peppol JP PINT is voluntary.",
+      "ja": "電子インボイスの義務はありません。インボイス制度では適格請求書は紙でも電子でもよく、売手の登録番号が記載され、買手がそれを保存することが仕入税額控除の要件です。Peppol JP PINT の利用は任意です。"
     },
     "verified": "2026-09-02",
-    "src": "https://www.nta.go.jp/"
+    "src": "https://www.invoice-kohyo.nta.go.jp/"
+  },
+  "peppol": {
+    "eas": "0221",
+    "scheme": "The registered number of the qualified invoice issuer",
+    "label": {
+      "en": "Peppol address",
+      "es": "Dirección Peppol"
+    },
+    "note": {
+      "en": "Electronic address for e-invoice routing: the EAS scheme code plus your identifier. Carry it now and the card is already correct when a counterparty moves to Peppol.",
+      "es": "Dirección electrónica para el enrutamiento de facturas: el código de esquema EAS más tu identificador. Tenerlo ya deja la tarjeta lista cuando una contraparte pase a Peppol."
+    },
+    "verified": "2026-09-02",
+    "src": "https://docs.peppol.eu/edelivery/codelists/"
+  },
+  "fields": {
+    "peppolId": {
+      "label": {
+        "en": "Peppol ID",
+        "es": "ID Peppol"
+      }
+    }
   }
 }

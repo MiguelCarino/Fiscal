@@ -1,0 +1,816 @@
+{
+  "note": "Reference values the gate runs through js/engines.js. Every bucket under `countries` is the status FiscalEngines.validate must return, so a regex that starts rejecting a real number, a weight vector that drifts, or a placeholder that starts validating all fail the build rather than shipping. `expected` pins the check character the badge offers back — a value of null means the engine must NOT name one, because where the body ends is a guess and a suggested digit resting on a guess is the worst thing this app can print. `weak` pins the caveat that says the authority's own rule matched but cannot catch every single-character typo. `fields` is the same idea for Engines.checkField, which is failure-only, so its 'ok' bucket means it returned nothing at all. The `ok` values are, wherever one was available, a number the authority itself publishes for the entity named beside it in the record — a fixture invented by computing the check digit from the same code it is meant to test proves nothing. Where no published number exists for a personal identifier, and it would be someone's real tax number if it did, the value is constructed and says so below.",
+  "constructed": {
+    "FR.nif.ok": "No published numéro fiscal exists to cite and a real one identifies a person, so this value is built from the modulus 511 rule itself and only guards against the engine changing.",
+    "CO.nit.ok.10132456783": "A natural person's NIT on a ten-digit cédula. Constructed, and present because that body length is the one the shipped weight vector could not reach.",
+    "ZA.vat.unimplemented": "Shape only — the record deliberately runs no arithmetic here.",
+    "CO.nit.expected": "A NIT written without its verification digit cannot be told from one that has it, so the bare forms are pinned to null: where the engine reports a mismatch it must refuse to name a digit, and where the arithmetic happens to match it must not claim a verdict at all.",
+    "ZA.vat.not-issuable": "The format pins a leading 4, so the all-zero serial is not a string of zeros and the general rule cannot see it.",
+    "BR.cnpj.bad-check.11111111111111": "Nine of the ten repeated-digit CNPJs already fail Receita's own check digit, and the `denied` list exists to overturn an acceptance rather than to replace a rejection — pinned here so a denial can never quietly make a fake number read as less wrong than the arithmetic already found it.",
+    "CO.nit.ok.1.013.245.678-3": "The same constructed ten-digit body as above, written the way DIAN prints it. Punctuation is what tells the engine the last digit is the verification digit rather than the last of the cédula, so the printed form has to be exercised too.",
+    "CO.nit.ok.11111111111": "The only repeated-digit NIT the DIAN weights accept, and pinned green on purpose. Brazil denies the same class because Receita Federal publishes that it never issues it; DIAN publishes nothing of the kind, the cédula field already accepts 1111111111 with no rule to run, and a denial invented here would land on whoever holds that cédula rather than on a filler. Whoever changes this is changing a judgement, not a bug — the badge says the verification digit fits the body, which is true, and the record's note says that is all it says.",
+    "BR.cnpj.ok.alphanumeric": "Receita Federal issues alphanumeric CNPJs from July 2026 and none has been published to cite, so these are built from IN RFB 2229/2024's own rule. They are here because the rule that strikes out a serial of zeros used to read the digits on their own and miss where the check digits sat: ABCDEFGHIJKL80 has no digit in its body at all, A0BCDEFGHIJK89's only body digit is a zero, and GY0F9TFHMEKV00 carries a check field of zeros beside a body that is not one. Every one of them is a number Receita can hand out, and a red badge on any of them is the worst thing this app can print.",
+    "US.ein.refused": "An SSN is written 3-2-4 and an EIN 2-7, so the grouping is the discriminator and the separator is not: every character a person plausibly types between the groups is refused, and the ITIN — printed in the same 3-2-4 — is not, because the SSA issues no number beginning with a 9.",
+    "GB.vat.expected": "HMRC admits two check pairs and nothing in the number says which register issued it, so a failure reports the mismatch and names nothing: the pair the classic rule computes is itself a valid VAT number belonging to somebody else.",
+    "ES.nif.expected": "A CIF whose entity type takes either control — the register decided which — is pinned to null for the same reason. Where only one control is issuable the character is named, which is what the other three pin.",
+    "AU.abn.not-issuable": "The ATO prepends two check digits to the nine it issues, so an ABN whose nine-digit serial is all zeros was never anybody's. Two of them satisfy modulus 89 and the record has no list to name them in.",
+    "GB.vat.not-issuable": "The registration number is the seven leading digits; the two check digits and the three-digit branch are not part of it. An all-zero registration number satisfies both check rules, under every branch, and none of those were issued.",
+    "CO.nit.unimplemented": "Nine or ten bare digits are a NIT body and its verification digit or a body still missing one, and one in ten of the incomplete ones satisfies the DIAN weights by coincidence — measured, not estimated: over the whole nine-digit space exactly 99,999,999 of 1,000,000,000 did. So a match under a reading nobody chose is not a verdict, and the engine says the rule was not run instead. 890903938 is a real published NIT body written without its digit; 791234560 was in the `ok` bucket until this was fixed. The trailing and leading separator forms are here because a value abandoned mid-typing must not read as checked either. 79.123.456-0 is the same body written the way DIAN prints it, and it is in `ok`: the fix must cost nothing to a number written correctly.",
+    "CL.rut.unimplemented": "The Chilean case of the same thing. A RUT body is 7 or 8 digits, so eight bare characters are a seven-digit body and its digit or an eight-digit body still missing one: 76086427 is 7.608.642-7 written run together and 76086428 is the body of 76.086.428-5 with its digit not yet typed, and nothing in either string says which it is. cl.json's own note already asked for the hyphen; this is the engine agreeing with it. 760864285 stays in `ok`, because at nine characters there is only one reading, and 76086428 stays in `bad-check`, because a mismatch is wrong under one reading and incomplete under the other and is worth reporting either way."
+  },
+  "countries": {
+    "AR": {
+      "cuit": {
+        "ok": [
+          "20123456786",
+          "20-12345678-6"
+        ],
+        "bad-check": [
+          "27123456784",
+          "30546668442"
+        ],
+        "bad-format": [
+          "2012345678",
+          "20A23456786"
+        ],
+        "not-issuable": [
+          "00000000000"
+        ]
+      }
+    },
+    "AU": {
+      "abn": {
+        "ok": [
+          "51824753556",
+          "53004085616",
+          "11 000 016 722"
+        ],
+        "bad-check": [
+          "51824753557",
+          "00000000000"
+        ],
+        "bad-format": [
+          "5182475355",
+          "51824753556X"
+        ],
+        "not-issuable": [
+          "10000000000",
+          "99000000000"
+        ]
+      }
+    },
+    "BE": {
+      "vat": {
+        "ok": [
+          "BE0776091951",
+          "0776091951",
+          "BE 0403.199.702",
+          "BE1000123448"
+        ],
+        "bad-check": [
+          "BE0776091950",
+          "BE1000123449"
+        ],
+        "bad-format": [
+          "BE2000123448",
+          "BE100012344",
+          "0776091951X"
+        ],
+        "not-issuable": [
+          "0000000097",
+          "BE0000000097"
+        ]
+      }
+    },
+    "BR": {
+      "cpf": {
+        "ok": [
+          "11144477735",
+          "529.982.247-25"
+        ],
+        "bad-check": [
+          "11144477736",
+          "52998224726"
+        ],
+        "bad-format": [
+          "1114447773",
+          "111444777351"
+        ],
+        "not-issuable": [
+          "11111111111",
+          "000.000.000-00",
+          "99999999999"
+        ]
+      },
+      "cnpj": {
+        "ok": [
+          "11222333000181",
+          "11.222.333/0001-81",
+          "12ABC34501DE35",
+          "ABCDEFGHIJKL80",
+          "A0BCDEFGHIJK89",
+          "GY0F9TFHMEKV00"
+        ],
+        "bad-check": [
+          "11222333000182",
+          "12ABC34501DE34",
+          "ABCDEFGHIJKL81",
+          "11111111111111",
+          "11.111.111/1111-11"
+        ],
+        "bad-format": [
+          "1122233300018",
+          "11222333000abc"
+        ],
+        "not-issuable": [
+          "00000000000000"
+        ]
+      }
+    },
+    "CA": {
+      "bn": {
+        "ok": [
+          "123456782",
+          "121491807",
+          "123456782RT0001",
+          "121 491 807",
+          "121-491-807"
+        ],
+        "bad-check": [
+          "123456783",
+          "121491806"
+        ],
+        "bad-format": [
+          "12345678",
+          "123456782XX0001"
+        ],
+        "not-issuable": [
+          "000000000"
+        ]
+      }
+    },
+    "CL": {
+      "rut": {
+        "ok": [
+          "76.086.428-5",
+          "12.345.678-5",
+          "760864285"
+        ],
+        "unimplemented": [
+          "76086427",
+          "12345674"
+        ],
+        "bad-check": [
+          "76086428-4",
+          "12345678-9",
+          "76086428"
+        ],
+        "bad-format": [
+          "7608642-85K",
+          "760864285K"
+        ],
+        "not-issuable": [
+          "00000000",
+          "000000000"
+        ]
+      }
+    },
+    "CO": {
+      "nit": {
+        "ok": [
+          "890903938-8",
+          "860002964-4",
+          "800197268-4",
+          "79.123.456-0",
+          "10132456783",
+          "1.013.245.678-3",
+          "11111111111"
+        ],
+        "unimplemented": [
+          "791234560",
+          "890903938",
+          "9001234568",
+          "890903938-",
+          "-890903938"
+        ],
+        "bad-check": [
+          "890903938-7",
+          "520987654"
+        ],
+        "bad-format": [
+          "89090393",
+          "890903938-88-1",
+          "8909039A88"
+        ],
+        "not-issuable": [
+          "000000000",
+          "0000000000",
+          "00000000000"
+        ]
+      },
+      "cedula": {
+        "unchecked": [
+          "123456",
+          "1234567",
+          "79123456",
+          "123456789",
+          "1013245678"
+        ],
+        "bad-format": [
+          "12345",
+          "AQ123456"
+        ],
+        "not-issuable": [
+          "000000",
+          "0000000000"
+        ]
+      }
+    },
+    "DE": {
+      "ustIdNr": {
+        "ok": [
+          "DE136695976",
+          "DE129273398",
+          "DE811128135"
+        ],
+        "bad-check": [
+          "DE136695975",
+          "DE129273390"
+        ],
+        "bad-format": [
+          "DE13669597",
+          "136695976"
+        ],
+        "not-issuable": [
+          "DE000000003"
+        ]
+      },
+      "steuernummer": {
+        "unchecked": [
+          "1234567890",
+          "12345678901",
+          "123456789012",
+          "1234567890123"
+        ],
+        "bad-format": [
+          "123456789",
+          "12345678901234"
+        ],
+        "not-issuable": [
+          "0000000000",
+          "0000000000000"
+        ]
+      }
+    },
+    "ES": {
+      "nif": {
+        "ok": [
+          "12345678Z",
+          "X1234567L",
+          "Y1234567X",
+          "A58818501",
+          "R2800828B",
+          "G28667152"
+        ],
+        "bad-check": [
+          "12345678A",
+          "X1234567A",
+          "A58818502",
+          "R2800828A"
+        ],
+        "bad-format": [
+          "1234567Z",
+          "123456789Z"
+        ],
+        "not-issuable": [
+          "00000000T",
+          "X0000000T",
+          "A00000000"
+        ]
+      }
+    },
+    "FR": {
+      "nif": {
+        "ok": [
+          "1234567890066"
+        ],
+        "bad-check": [
+          "1234567890123",
+          "2510700123456"
+        ],
+        "bad-format": [
+          "123456789006",
+          "12345678900666"
+        ],
+        "not-issuable": [
+          "0000000000000"
+        ]
+      },
+      "siren": {
+        "ok": [
+          "552032534",
+          "732829320",
+          "443061841",
+          "380 129 866"
+        ],
+        "bad-check": [
+          "552032535",
+          "123456789"
+        ],
+        "bad-format": [
+          "55203253",
+          "55203253A"
+        ],
+        "not-issuable": [
+          "000000000"
+        ]
+      },
+      "tva": {
+        "unimplemented": [
+          "FR40552032534",
+          "FRK7552032534"
+        ],
+        "bad-format": [
+          "FR4055203253",
+          "40552032534"
+        ],
+        "not-issuable": [
+          "FR00000000000"
+        ]
+      }
+    },
+    "GB": {
+      "vat": {
+        "ok": [
+          "980780684",
+          "GB 980 7806 84",
+          "980780684001",
+          "GB980780684001"
+        ],
+        "bad-check": [
+          "980780683",
+          "GB123456789"
+        ],
+        "bad-format": [
+          "98078068",
+          "GB98078068A"
+        ],
+        "not-issuable": [
+          "000000000",
+          "GB000000000",
+          "000000042",
+          "000000000001",
+          "000000042999"
+        ]
+      },
+      "utr": {
+        "unchecked": [
+          "1234567890"
+        ],
+        "bad-format": [
+          "123456789",
+          "12345678901"
+        ],
+        "not-issuable": [
+          "0000000000"
+        ]
+      }
+    },
+    "GR": {
+      "afm": {
+        "ok": [
+          "094014201",
+          "090000045"
+        ],
+        "bad-check": [
+          "094014202",
+          "090000046"
+        ],
+        "bad-format": [
+          "09401420",
+          "09401420A"
+        ],
+        "not-issuable": [
+          "000000000"
+        ]
+      }
+    },
+    "IN": {
+      "gstin": {
+        "ok": [
+          "27AAPFU0939F1ZV",
+          "29AAGCB7383J1Z4"
+        ],
+        "bad-check": [
+          "07AAACG4373D1ZQ",
+          "27AAPFU0939F1ZA"
+        ],
+        "bad-format": [
+          "27AAPFU0939F1Z",
+          "AAPFU0939F1ZV27"
+        ]
+      },
+      "pan": {
+        "unchecked": [
+          "AAPFU0939F"
+        ],
+        "bad-format": [
+          "AAPFU0939",
+          "AAPF0939FA"
+        ],
+        "not-issuable": [
+          "AAPFU0000F"
+        ]
+      }
+    },
+    "IT": {
+      "partitaIva": {
+        "ok": [
+          "00743110157",
+          "00159560366",
+          "00488410010"
+        ],
+        "bad-check": [
+          "00743110150",
+          "00159560360"
+        ],
+        "bad-format": [
+          "0074311015",
+          "IT00743110157"
+        ],
+        "not-issuable": [
+          "00000000000"
+        ]
+      },
+      "codiceFiscale": {
+        "ok": [
+          "RSSMRA85T10A562S",
+          "MRTMTT25D09F205Z",
+          "RSSMRA85T1LA562V",
+          "00743110157"
+        ],
+        "bad-check": [
+          "RSSMRA85T10A562A",
+          "MRTMTT25D09F205A"
+        ],
+        "bad-format": [
+          "ORD20260012345",
+          "1234567890123456",
+          "ABCDEFGH123456",
+          "RSSMRA85Z10A562S"
+        ],
+        "not-issuable": [
+          "00000000000"
+        ]
+      }
+    },
+    "JP": {
+      "registrationNumber": {
+        "ok": [
+          "T7000012050002",
+          "T1180301018771",
+          "T5010001008846"
+        ],
+        "bad-check": [
+          "T1180301018772",
+          "T7000012050003"
+        ],
+        "bad-format": [
+          "1180301018771",
+          "T118030101877"
+        ],
+        "refused": [
+          "123456789012",
+          "1234-5678-9012",
+          "1234.5678.9012",
+          "1234 5678 9012",
+          "1234／5678／9012"
+        ],
+        "not-issuable": [
+          "T9000000000000"
+        ]
+      },
+      "registrationNumberIndividual": {
+        "unchecked": [
+          "T1234567890123"
+        ],
+        "bad-format": [
+          "1234567890123",
+          "T123456789012"
+        ],
+        "refused": [
+          "123456789012",
+          "1234.5678.9012",
+          "1234 5678 9012",
+          "1234／5678／9012"
+        ],
+        "not-issuable": [
+          "T0000000000000"
+        ]
+      },
+      "corporateNumber": {
+        "ok": [
+          "1180301018771",
+          "7000012050002",
+          "5010001008846"
+        ],
+        "bad-check": [
+          "1180301018772",
+          "0180301018771"
+        ],
+        "bad-format": [
+          "11803010187710",
+          "T1180301018771"
+        ],
+        "not-issuable": [
+          "9999999999999",
+          "9000000000000"
+        ],
+        "refused": [
+          "123456789012",
+          "1234.5678.9012",
+          "1234 5678 9012",
+          "1234／5678／9012"
+        ]
+      }
+    },
+    "MX": {
+      "rfc": {
+        "ok": [
+          "SAT970701NN3",
+          "CFE370814QI0",
+          "TME840315KT6",
+          "IMS421231I45",
+          "WAL9709244W4",
+          "CACM940213AA5"
+        ],
+        "bad-check": [
+          "SAT970701NN4",
+          "CACM940213AA6"
+        ],
+        "bad-format": [
+          "CACM941332AA8",
+          "CACM941302AA0",
+          "CAC940213AA5X0"
+        ],
+        "reserved": [
+          "XAXX010101000",
+          "XEXX010101000"
+        ]
+      },
+      "curp": {
+        "unimplemented": [
+          "GODE561231HDFXXX09",
+          "BEML920315MDFLPS04"
+        ],
+        "bad-format": [
+          "GODE569931HDFXXX09",
+          "GODE561231HZZXXX09",
+          "GODE561231HDFXXX0"
+        ]
+      }
+    },
+    "NL": {
+      "btwId": {
+        "unchecked": [
+          "NL123456789B01",
+          "NL8I3B2A4K5B01",
+          "NL00+*1234AB99"
+        ],
+        "bad-format": [
+          "NL123456789B0",
+          "123456789B01",
+          "NL123456789C01"
+        ],
+        "not-issuable": [
+          "NL000000000B00",
+          "NL000000000B01"
+        ]
+      }
+    },
+    "PE": {
+      "ruc": {
+        "ok": [
+          "20100047218",
+          "20131312955"
+        ],
+        "bad-check": [
+          "10123456789",
+          "20100047219"
+        ],
+        "bad-format": [
+          "2010004721",
+          "20100047218A"
+        ],
+        "not-issuable": [
+          "00000000001"
+        ]
+      },
+      "dni": {
+        "unchecked": [
+          "12345678"
+        ],
+        "bad-format": [
+          "1234567",
+          "123456789"
+        ],
+        "not-issuable": [
+          "00000000"
+        ]
+      }
+    },
+    "PL": {
+      "nip": {
+        "ok": [
+          "5260250274",
+          "526-025-02-74",
+          "5250007738",
+          "PL5260250274"
+        ],
+        "bad-check": [
+          "5260250275",
+          "7010001093"
+        ],
+        "bad-format": [
+          "526025027",
+          "52602502745"
+        ],
+        "not-issuable": [
+          "0000000000"
+        ]
+      }
+    },
+    "PT": {
+      "nif": {
+        "ok": [
+          "501442600",
+          "980405319",
+          "501964843",
+          "999999990"
+        ],
+        "bad-check": [
+          "501442601",
+          "980405310"
+        ],
+        "bad-format": [
+          "50144260",
+          "501442600A"
+        ],
+        "not-issuable": [
+          "000000000"
+        ]
+      }
+    },
+    "US": {
+      "ein": {
+        "unchecked": [
+          "123456789",
+          "12-3456789",
+          "12.3456789",
+          "12 - 3456789",
+          "912-70-1234"
+        ],
+        "bad-format": [
+          "12345678",
+          "1234567890"
+        ],
+        "refused": [
+          "123-45-6789",
+          "123 45 6789",
+          "123.45.6789",
+          "123/45/6789",
+          "123 - 45 - 6789",
+          "078–05–1120",
+          "１２３-４５-６７８９",
+          "123\t45\t6789"
+        ],
+        "not-issuable": [
+          "000000000"
+        ]
+      },
+      "itin": {
+        "unchecked": [
+          "912701234",
+          "912-70-1234",
+          "999-99-9999"
+        ],
+        "bad-format": [
+          "900-00-0000",
+          "912-69-0000",
+          "123-45-6789",
+          "91270123"
+        ]
+      }
+    },
+    "ZA": {
+      "vat": {
+        "unimplemented": [
+          "4820119434"
+        ],
+        "bad-format": [
+          "3820119434",
+          "482011943"
+        ],
+        "not-issuable": [
+          "4000000000"
+        ]
+      },
+      "taxRef": {
+        "unchecked": [
+          "1234567890"
+        ],
+        "bad-format": [
+          "123456789",
+          "12345678901"
+        ],
+        "not-issuable": [
+          "0000000000"
+        ]
+      }
+    }
+  },
+  "expected": {
+    "CO.nit": {
+      "890903938-8": "8",
+      "1013245678-9": "3",
+      "10132456780": "3",
+      "1013245678": null,
+      "900123456": null,
+      "9001234561": null,
+      "520987654": null,
+      "900.123.456": null,
+      "900.123.456-8": "8",
+      "79.123.456-0": "0"
+    },
+    "CL.rut": {
+      "76086428-4": "5",
+      "760864284": "5",
+      "12345679": null
+    },
+    "BR.cpf": {
+      "52998224726": "25"
+    },
+    "AR.cuit": {
+      "27123456784": "0"
+    },
+    "JP.corporateNumber": {
+      "1180301018772": "9"
+    },
+    "BR.cnpj": {
+      "11222333000182": "81",
+      "11111111111111": "80",
+      "ABCDEFGHIJKL81": "80"
+    },
+    "GB.vat": {
+      "980780684": "84",
+      "980780683": null,
+      "GB123456789": null
+    },
+    "ES.nif": {
+      "12345678A": "Z",
+      "A58818502": "1",
+      "R2800828A": "B",
+      "G28667153": null
+    }
+  },
+  "weak": {
+    "MX.rfc": {
+      "SAT970701NN3": "rfc-weight-11",
+      "SAT970701NN4": null
+    },
+    "JP.corporateNumber": {
+      "7000012050002": "mod9-zero-nine"
+    },
+    "JP.registrationNumber": {
+      "T7000012050002": "mod9-zero-nine"
+    },
+    "BR.cpf": {
+      "11144477735": null
+    },
+    "ES.nif": {
+      "12345678Z": null
+    },
+    "IT.codiceFiscale": {
+      "RSSMRA85T10A562S": null
+    },
+    "GR.afm": {
+      "094014201": null
+    }
+  },
+  "fields": {
+    "MX": {
+      "cp": {
+        "ok": [
+          "64000",
+          "01000"
+        ],
+        "bad-format": [
+          "1234",
+          "640000",
+          "6400A",
+          "64 000"
+        ]
+      }
+    }
+  }
+}

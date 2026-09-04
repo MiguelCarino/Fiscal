@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "SUNAT — Superintendencia Nacional de Aduanas y de Administración Tributaria",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.sunat.gob.pe/"
+    "on": "2026-09-03",
+    "src": "https://www.sunat.gob.pe/legislacion/superin/2021/anexo-112-2021.pdf",
+    "note": "SUNAT's Anexo N.º 1 to Resolución de Superintendencia N.º 000112-2021, on the authority's own legislation path. Its document table is SUNAT stating, normatively, each identity document's length and type and whether Módulo 11 applies — which is where the RUC's eleven digits and the DNI's eight come from, and why the RUC is checked and the DNI is not. As with Chile, the modulus is named and the weights are not."
   },
   "identifiers": [
     {
@@ -13,6 +14,7 @@
         "en": "RUC"
       },
       "format": "^[0-9]{11}$",
+      "scope": "business",
       "checksum": {
         "engine": "mod11-weighted",
         "weights": [
@@ -28,6 +30,12 @@
           2
         ],
         "map": "peru"
+      },
+      "denied": [
+        "00000000001"
+      ],
+      "note": {
+        "en": "The eleventh digit is a modulus 11 over the ten before it, weighted 5,4,3,2 then 7,6,5,4,3,2. SUNAT issues no serial of zeros, and that number satisfies the arithmetic, so it is denied by name."
       }
     },
     {
@@ -36,11 +44,12 @@
         "en": "DNI"
       },
       "format": "^[0-9]{8}$",
+      "scope": "personal",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "Structure only. RENIEC prints a verification character beside the DNI rather than inside it, and publishes no rule to derive it, so the format is the whole of what can be checked."
       }
     }
   ],

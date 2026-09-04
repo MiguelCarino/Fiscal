@@ -14,10 +14,17 @@
         "en": "NIT",
         "es": "NIT"
       },
-      "format": "^[0-9]{9,10}$",
+      "format": "^[0-9]{9,11}$",
+      "scope": "business",
       "checksum": {
         "engine": "mod11-weighted",
         "weights": [
+          71,
+          67,
+          59,
+          53,
+          47,
+          43,
           41,
           37,
           29,
@@ -28,11 +35,48 @@
           7,
           3
         ],
-        "map": "dian"
+        "map": "dian",
+        "bodyLengths": [
+          8,
+          9,
+          10
+        ]
       },
+      "denied": [
+        "000000000",
+        "0000000000",
+        "00000000000"
+      ],
       "checkLabel": {
         "en": "verification digit",
         "es": "dígito de verificación"
+      },
+      "display": "#########-#",
+      "note": {
+        "en": "Write the verification digit apart from the body, 900123456-8, the way DIAN prints it in its own box. That separator is the only thing in the number that says where the body ends: a natural person's NIT is their cédula plus the digit, so the body is 8, 9 or 10 digits long, and nine or ten bare digits are either a body and its digit or a body still missing one. Run together at those lengths this app declines to run the rule at all and says so, because one incomplete number in ten satisfies the arithmetic by coincidence and a green badge on it would be the worst answer this app could give. Written the way DIAN prints it the rule runs, with the published weights applied from the verification digit leftwards. DIAN publishes no rule against a number of repeated digits the way Receita Federal does for Brazil's CPF, so 11111111111 satisfies the arithmetic and this app says so rather than inventing a denial that would fall on whoever holds the cédula underneath it. A green badge here means the verification digit fits the body and nothing more.",
+        "es": "Escribe el dígito de verificación separado del cuerpo, 900123456-8, como lo imprime la DIAN en su propia casilla. Ese separador es lo único en el número que dice dónde termina el cuerpo: el NIT de una persona natural es su cédula más el dígito, así que el cuerpo tiene 8, 9 o 10 cifras, y nueve o diez cifras seguidas son o un cuerpo con su dígito o un cuerpo al que aún le falta. Pegado a esas longitudes la app no aplica la regla y lo dice, porque uno de cada diez números incompletos cuadra con la aritmética por casualidad y un sello verde encima sería la peor respuesta que podría dar. Escrito como lo imprime la DIAN sí se aplica la regla, con los pesos publicados desde el dígito de verificación hacia la izquierda. La DIAN no publica ninguna regla contra los números de cifras repetidas como la que la Receita Federal aplica al CPF de Brasil, así que 11111111111 cuadra con la aritmética y la app lo dice, en vez de inventar un rechazo que caería sobre quien tenga esa cédula. Un sello verde aquí significa que el dígito de verificación cuadra con el cuerpo y nada más."
+      },
+      "variants": {
+        "on": "tipoDocumento",
+        "default": "31",
+        "by": {
+          "50": {
+            "label": {
+              "en": "Foreign tax number",
+              "es": "NIT de otro país"
+            },
+            "format": "^[A-Z0-9]{4,20}$",
+            "checksum": {
+              "engine": "structural"
+            },
+            "checkLabel": null,
+            "display": null,
+            "note": {
+              "en": "Structure only. Another country issued this number, so its shape and its check digit — if it has one — belong to that country and nothing here can verify either. Give it to DIAN exactly as it is printed, with document type 50 beside it.",
+              "es": "Solo estructura. Este número lo expidió otro país, así que su forma y su dígito de verificación —si lo tiene— son de ese país y aquí no se puede comprobar ninguno de los dos. Dáselo a la DIAN tal como está impreso, con el tipo de documento 50 al lado."
+            }
+          }
+        }
       }
     },
     {
@@ -42,12 +86,84 @@
         "es": "Cédula de ciudadanía"
       },
       "format": "^[0-9]{6,10}$",
+      "scope": "personal",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "The cédula carries no published check digit. Format only — the badge says so.",
-        "es": "La cédula no tiene dígito de verificación publicado. Solo formato: la etiqueta lo indica."
+        "en": "Structure only. The authority publishes no check-digit rule for the cédula, so the format is the whole of what can be checked. Pick the document type first: a passport or a foreign document is held in this same field, under its own name and its own shape.",
+        "es": "Solo formato. La autoridad no publica dígito de verificación para la cédula, así que el formato es todo lo que se puede comprobar. Elige primero el tipo de documento: el pasaporte o un documento extranjero se guardan en este mismo campo, con su nombre y su forma."
+      },
+      "variants": {
+        "on": "tipoDocumento",
+        "default": "13",
+        "by": {
+          "22": {
+            "label": {
+              "en": "Cédula de extranjería",
+              "es": "Cédula de extranjería"
+            },
+            "note": {
+              "en": "Structure only. No check-digit rule is published for the cédula de extranjería, so the format is the whole of what can be checked. It is numeric and shares the cédula de ciudadanía's shape, which is why the same field holds both.",
+              "es": "Solo estructura. No se publica dígito de verificación para la cédula de extranjería, así que el formato es todo lo que se puede comprobar. Es numérica y comparte la forma de la cédula de ciudadanía, por eso las guarda el mismo campo."
+            }
+          },
+          "41": {
+            "label": {
+              "en": "Passport number",
+              "es": "Número de pasaporte"
+            },
+            "format": "^[A-Z0-9]{5,15}$",
+            "note": {
+              "en": "Structure only. A passport number is whatever the issuing state prints, so there is no check digit and no single shape to hold it to.",
+              "es": "Solo estructura. El número de pasaporte es el que imprime el Estado emisor, así que no hay dígito de verificación ni un formato único al que ajustarlo."
+            }
+          },
+          "42": {
+            "label": {
+              "en": "Foreign identity document",
+              "es": "Documento de identificación extranjero"
+            },
+            "format": "^[A-Z0-9]{4,20}$",
+            "note": {
+              "en": "Structure only. The issuing country decides the format, so nothing beyond the length and character set can be checked here.",
+              "es": "Solo estructura. El formato lo decide el país emisor, así que aquí no se puede comprobar más que la longitud y los caracteres."
+            }
+          },
+          "47": {
+            "label": {
+              "en": "PEP — Permiso Especial de Permanencia",
+              "es": "PEP — Permiso Especial de Permanencia"
+            },
+            "format": "^[0-9]{4,20}$",
+            "note": {
+              "en": "Structure only. The permit number is numeric and longer than a cédula; no check-digit rule is published for it.",
+              "es": "Solo estructura. El número del permiso es numérico y más largo que una cédula; no se publica dígito de verificación."
+            }
+          },
+          "48": {
+            "label": {
+              "en": "PPT — Permiso por Protección Temporal",
+              "es": "PPT — Permiso por Protección Temporal"
+            },
+            "format": "^[0-9]{4,20}$",
+            "note": {
+              "en": "Structure only. The permit number is numeric; no check-digit rule is published for it.",
+              "es": "Solo estructura. El número del permiso es numérico; no se publica dígito de verificación."
+            }
+          },
+          "91": {
+            "label": {
+              "en": "NUIP",
+              "es": "NUIP"
+            },
+            "format": "^[0-9]{10}$",
+            "note": {
+              "en": "Structure only. The NUIP is the ten-digit number carried by cédulas issued since 2000 and the authority publishes no check-digit rule for it.",
+              "es": "Solo estructura. El NUIP es el número de diez cifras de las cédulas expedidas desde 2000 y la autoridad no publica dígito de verificación."
+            }
+          }
+        }
       }
     }
   ],
@@ -112,7 +228,7 @@
         "en": "Document type",
         "es": "Tipo de documento"
       },
-      "source": "DIAN — tipos de documento de identificación, factura electrónica",
+      "source": "DIAN — anexo técnico de la factura electrónica de venta, tabla de tipos de documento de identificación",
       "verified": "2026-09-02",
       "options": [
         {
@@ -149,6 +265,20 @@
             "personal"
           ],
           "label": "Documento de identificación extranjero"
+        },
+        {
+          "code": "47",
+          "applies": [
+            "personal"
+          ],
+          "label": "PEP — Permiso Especial de Permanencia"
+        },
+        {
+          "code": "48",
+          "applies": [
+            "personal"
+          ],
+          "label": "PPT — Permiso por Protección Temporal"
         },
         {
           "code": "50",

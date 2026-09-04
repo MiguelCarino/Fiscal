@@ -13,12 +13,20 @@
         "en": "VAT number"
       },
       "format": "^(GB)?[0-9]{9}([0-9]{3})?$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "gb-vat"
       },
+      "denied": [
+        "000000000",
+        "GB000000000",
+        "000000000000",
+        "GB000000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "HMRC's modulus 97: the seven leading digits weighted 8 down to 2, closed by the two check digits. Numbers issued from 2010 use the same sum shifted by 55, and nothing in the number says which, so either is accepted — and a failure names neither, because the pair one rule computes is a real VAT number belonging to somebody else. Those seven digits are the registration number; a trailing three identify a branch and take no part in the check. An all-zero registration number satisfies both rules under every branch and was issued under none of them."
+      },
+      "display": "GB ### #### ##"
     },
     {
       "key": "utr",
@@ -26,21 +34,23 @@
         "en": "UTR"
       },
       "format": "^[0-9]{10}$",
+      "scope": "both",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "Structure only. HMRC publishes no check-digit rule for the UTR — the leading digit behaves like one, but that is reverse-engineered rather than published, and an uncited rule does not belong in this app."
       }
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "vat",
+        "utr",
         "legalName"
       ],
       "optional": [
+        "vat",
         "email",
         "address"
       ]
@@ -52,7 +62,8 @@
       ],
       "optional": [
         "email",
-        "address"
+        "address",
+        "peppolId"
       ]
     }
   },
@@ -71,5 +82,27 @@
     },
     "verified": "2026-09-02",
     "src": "https://www.gov.uk/government/organisations/hm-revenue-customs"
+  },
+  "peppol": {
+    "eas": "9932",
+    "scheme": "United Kingdom VAT number",
+    "label": {
+      "en": "Peppol address",
+      "es": "Dirección Peppol"
+    },
+    "note": {
+      "en": "Electronic address for e-invoice routing: the EAS scheme code plus your identifier. Carry it now and the card is already correct when a counterparty moves to Peppol.",
+      "es": "Dirección electrónica para el enrutamiento de facturas: el código de esquema EAS más tu identificador. Tenerlo ya deja la tarjeta lista cuando una contraparte pase a Peppol."
+    },
+    "verified": "2026-09-02",
+    "src": "https://docs.peppol.eu/edelivery/codelists/"
+  },
+  "fields": {
+    "peppolId": {
+      "label": {
+        "en": "Peppol ID",
+        "es": "ID Peppol"
+      }
+    }
   }
 }

@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "Belastingdienst",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.belastingdienst.nl/"
+    "on": "2026-09-03",
+    "src": "https://www.belastingdienst.nl/wps/wcm/connect/nl/btw/content/btw-identificatienummer-en-omzetbelastingnummer",
+    "note": "The Belastingdienst publishes the shape here: “landcode NL, 9 cijfers, letter B, 2 cijfers, ook wel ‘subnummer’ genoemd”. The same page carries the reason this record checks structure only — it states that the ob-nummer has the holder's BSN worked into it and the btw-id does not, which is the separation that made the post-2020 number unpredictable."
   },
   "identifiers": [
     {
@@ -12,13 +13,19 @@
       "label": {
         "en": "Btw-identificatienummer"
       },
-      "format": "^NL[0-9]{9}B[0-9]{2}$",
+      "format": "^NL[0-9A-Z+*]{9}B[0-9]{2}$",
+      "scope": "both",
       "checksum": {
         "engine": "structural"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "Both forms are accepted. The pre-2020 number is nine digits derived from the holder's BSN and does carry a modulus 11; the number the Belastingdienst has issued sole traders since January 2020 is randomly generated, may hold letters, + or *, and carries no check at all — which is the point, because it is what stopped ZZP'ers printing their BSN on invoices. One field cannot tell which form it holds, so neither is checked rather than failing the new one."
+      },
+      "display": "NL#########B##",
+      "denied": [
+        "NL000000000B00",
+        "NL000000000B01"
+      ]
     }
   ],
   "invoiceProfile": {

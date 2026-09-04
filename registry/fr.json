@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "DGFiP — Direction générale des Finances publiques",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.impots.gouv.fr/"
+    "on": "2026-09-03",
+    "src": "https://www.impots.gouv.fr/sites/default/files/media/1_metier/3_partenaire/tiers_declarants/spi/algorithme_spi.pdf",
+    "note": "DGFiP's own note, “Règles de vérification de l'algorithme du numéro SPI”, which publishes the numéro fiscal end to end: thirteen characters, C1 restricted to 0-3, and the check “Concaténer C1…C10 ; obtenir le résultat modulo 511 ; vérifier le nombre = Reste”, zero-padded into C11C12C13. That is the mod511 engine, from the authority. SIREN's Luhn is INSEE's at xml.insee.fr/schema/siret.html; the TVA key has no published rule and stays unimplemented."
   },
   "identifiers": [
     {
@@ -13,9 +14,13 @@
         "en": "Numéro fiscal"
       },
       "format": "^[0-9]{13}$",
+      "scope": "personal",
       "checksum": {
         "engine": "mod511"
-      }
+      },
+      "denied": [
+        "0000000000000"
+      ]
     },
     {
       "key": "siren",
@@ -23,12 +28,19 @@
         "en": "SIREN"
       },
       "format": "^[0-9]{9}$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "luhn-modN",
+        "alphabet": "0123456789",
+        "base": 10
       },
+      "denied": [
+        "000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "The ninth digit is a Luhn check over the eight before it."
+      },
+      "display": "### ### ###"
     },
     {
       "key": "tva",
@@ -36,11 +48,15 @@
         "en": "TVA intracommunautaire"
       },
       "format": "^FR[0-9A-Z]{2}[0-9]{9}$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "unimplemented"
       },
+      "denied": [
+        "FR00000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "Structure is checked. The two-character key is published as (12 + 3 × (SIREN mod 97)) mod 97, but numbers issued under the older scheme carry a key with letters in it that the same arithmetic does not produce, and a single rule cannot tell the two apart from the number alone. Confirm it against your own document."
       }
     }
   ],
@@ -61,6 +77,7 @@
         "legalName"
       ],
       "optional": [
+        "tva",
         "email",
         "address",
         "peppolId"
@@ -97,13 +114,14 @@
     }
   },
   "einvoicing": {
-    "status": "scheduled",
+    "status": "partial",
     "scheme": "EN 16931 / Factur-X",
     "note": {
-      "en": "From September 2026 every business must be able to RECEIVE e-invoices; issuing phases in by size."
+      "en": "Since September 2026 every business must be able to RECEIVE e-invoices, and large and mid-size firms must issue them. The obligation to issue reaches small and micro businesses in September 2027."
     },
     "verified": "2026-09-02",
     "src": "https://www.impots.gouv.fr/",
-    "from": "2026-09-01"
+    "from": "2026-09-01",
+    "fullyFrom": "2027-09-01"
   }
 }

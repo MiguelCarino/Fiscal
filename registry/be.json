@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "FPS Finance — SPF Finances",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://finances.belgium.be/"
+    "on": "2026-09-03",
+    "src": "https://www.ejustice.just.fgov.be/cgi_loi/change_lg.pl?language=nl&la=N&cn=2003062432&table_name=wet",
+    "note": "Article 3 of the Koninklijk besluit van 24 juni 2003, served from Justel, the federal government's consolidated-legislation database. It is the binding definition of the ondernemingsnummer the VAT number is built from: “Het ondernemings- en het vestigingseenheidsnummer bevatten 10 cijfers… Z, het eerste cijfer, is 0 of 1”, which is the shape this record's format encodes, and it places the check in “het negende en het tiende cijfer”. It fixes the position of the check, not its arithmetic."
   },
   "identifiers": [
     {
@@ -12,12 +13,22 @@
       "label": {
         "en": "BTW / TVA"
       },
-      "format": "^(BE)?0[0-9]{9}$",
+      "format": "^(BE)?[01][0-9]{9}$",
+      "scope": "business",
       "checksum": {
         "engine": "mod97",
         "bodyLength": 8
       },
-      "display": "BE #### ### ###"
+      "denied": [
+        "0000000097",
+        "1000000021",
+        "BE0000000097",
+        "BE1000000021"
+      ],
+      "display": "BE #### ### ###",
+      "note": {
+        "en": "The Crossroads Bank exhausted the 0-series and now issues enterprise numbers beginning with 1. The two series differ only in that leading digit; the modulus 97 over the first eight digits is the same for both. A serial of zeros satisfies that modulus in either series, so both zero numbers are denied by name."
+      }
     }
   ],
   "invoiceProfile": {

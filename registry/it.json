@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "Agenzia delle Entrate",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.agenziaentrate.gov.it/"
+    "on": "2026-09-03",
+    "src": "https://www.agenziaentrate.gov.it/portale/schede/istanze/codice-fiscale-modello-aa5_6/scheda-info-cf-aa5_6",
+    "note": "Agenzia delle Entrate's own scheda for the eleven-digit codice fiscale, which publishes its structure: seven progressive digits, three office digits and a final “carattere di controllo” computed over the first ten. That is the same construction as the partita IVA check, which is why both eleven-digit forms take the same engine. The sixteen-character personal code's control letter is defined by D.M. 23 dicembre 1976 and is not on this page."
   },
   "identifiers": [
     {
@@ -13,34 +14,48 @@
         "en": "Partita IVA"
       },
       "format": "^[0-9]{11}$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "luhn-modN",
+        "alphabet": "0123456789",
+        "base": 10
       },
+      "denied": [
+        "00000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "The eleventh digit is a Luhn check over the ten before it."
+      },
+      "display": "###########"
     },
     {
       "key": "codiceFiscale",
       "label": {
         "en": "Codice fiscale"
       },
-      "format": "^[A-Z0-9]{11,16}$",
+      "format": "^(?:[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]|[0-9]{11})$",
+      "scope": "both",
       "checksum": {
-        "engine": "structural"
+        "engine": "it-cf"
       },
+      "denied": [
+        "00000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
+        "en": "A person's codice fiscale is sixteen characters closed by the CIN check letter; omocodia substitutions, where a digit is replaced by a letter to separate two people who would otherwise collide, are accepted and take part in the check as written. An entity's is eleven digits and is the same number as its Partita IVA, so it takes the same Luhn."
       }
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "partitaIva",
+        "codiceFiscale",
         "legalName"
       ],
       "optional": [
+        "partitaIva",
+        "codiceDestinatario",
+        "pec",
         "email",
         "address"
       ]
@@ -51,6 +66,9 @@
         "legalName"
       ],
       "optional": [
+        "codiceFiscale",
+        "codiceDestinatario",
+        "pec",
         "email",
         "address",
         "peppolId"
@@ -65,8 +83,8 @@
     "print"
   ],
   "peppol": {
-    "eas": "9906",
-    "scheme": "Italian VAT number",
+    "eas": "0211",
+    "scheme": "PARTITA IVA",
     "label": {
       "en": "Peppol address",
       "es": "Dirección Peppol"
@@ -84,13 +102,27 @@
         "en": "Peppol ID",
         "es": "ID Peppol"
       }
+    },
+    "codiceDestinatario": {
+      "label": {
+        "en": "Codice Destinatario (SdI)",
+        "es": "Código Destinatario (SdI)"
+      },
+      "display": "M5UXCR1 · 0000000 if you have none · XXXXXXX for a foreign supplier"
+    },
+    "pec": {
+      "label": {
+        "en": "PEC address",
+        "es": "Dirección PEC"
+      },
+      "display": "azienda@pec.it"
     }
   },
   "einvoicing": {
     "status": "mandatory",
     "scheme": "FatturaPA / SdI",
     "note": {
-      "en": "Give the Codice Destinatario or PEC address as well as the tax number — the invoice routes on it."
+      "en": "Give the Codice Destinatario or PEC address as well as the tax number — the invoice routes on it. Both have their own field on this card."
     },
     "verified": "2026-09-02",
     "src": "https://www.agenziaentrate.gov.it/"

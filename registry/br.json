@@ -4,7 +4,8 @@
   "authority": "Receita Federal do Brasil",
   "verified": {
     "on": "2026-09-02",
-    "src": "https://www.gov.br/receitafederal/"
+    "src": "https://www.gov.br/receitafederal/",
+    "note": "The CNPJ's alphanumeric form and its character values are set by Instrução Normativa RFB 2229/2024, in force for numbers issued from July 2026."
   },
   "identifiers": [
     {
@@ -13,6 +14,7 @@
         "en": "CPF"
       },
       "format": "^[0-9]{11}$",
+      "scope": "personal",
       "checksum": {
         "engine": "mod11-weighted",
         "digits": 2,
@@ -43,6 +45,21 @@
           ]
         ]
       },
+      "denied": [
+        "00000000000",
+        "11111111111",
+        "22222222222",
+        "33333333333",
+        "44444444444",
+        "55555555555",
+        "66666666666",
+        "77777777777",
+        "88888888888",
+        "99999999999"
+      ],
+      "note": {
+        "en": "All eleven digits the same satisfies Receita Federal's own modulus 11, which is why the rule strikes those numbers out separately rather than by arithmetic. A card holding one is told the number was never issued, not that its check digit matched."
+      },
       "display": "###.###.###-##"
     },
     {
@@ -50,7 +67,8 @@
       "label": {
         "en": "CNPJ"
       },
-      "format": "^[0-9]{14}$",
+      "format": "^[0-9A-Z]{12}[0-9]{2}$",
+      "scope": "business",
       "checksum": {
         "engine": "mod11-weighted",
         "digits": 2,
@@ -85,9 +103,25 @@
             3,
             2
           ]
-        ]
+        ],
+        "charValue": "ascii-48"
       },
-      "display": "##.###.###/####-##"
+      "denied": [
+        "00000000000000",
+        "11111111111111",
+        "22222222222222",
+        "33333333333333",
+        "44444444444444",
+        "55555555555555",
+        "66666666666666",
+        "77777777777777",
+        "88888888888888",
+        "99999999999999"
+      ],
+      "display": "##.###.###/####-##",
+      "note": {
+        "en": "Receita Federal began issuing alphanumeric CNPJs in July 2026 under IN RFB 2229/2024: the first twelve characters may be digits or capital letters, each worth its ASCII code less 48, and the two check digits stay numeric. Numbers issued before then are unchanged and still validate."
+      }
     }
   ],
   "invoiceProfile": {

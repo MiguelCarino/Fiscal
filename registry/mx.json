@@ -14,7 +14,8 @@
         "en": "RFC",
         "es": "RFC"
       },
-      "format": "^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$",
+      "format": "^[A-ZÑ&]{3,4}[0-9]{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12][0-9]|3[01])[A-Z0-9]{3}$",
+      "scope": "both",
       "checksum": {
         "engine": "mx-rfc"
       },
@@ -25,6 +26,10 @@
       "reservedNote": {
         "en": "SAT's generic RFCs. XAXX010101000 (público en general) does not satisfy the check-digit algorithm — it is an administrative constant, not a broken number.",
         "es": "RFC genéricos del SAT. XAXX010101000 (público en general) no cumple el dígito verificador: es una constante administrativa, no un número mal capturado."
+      },
+      "note": {
+        "en": "The six middle digits are a date, so an impossible month or day is rejected on shape before the check digit is computed. SAT's own algorithm gives the third character of the padded body no weight, so it cannot catch every mistyped letter of the name block — confirm the RFC against your Cédula de Datos Fiscales.",
+        "es": "Las seis cifras centrales son una fecha, así que un mes o un día imposibles se rechazan por forma antes de calcular el dígito verificador. El propio algoritmo del SAT no da peso al tercer carácter del cuerpo, así que no detecta cualquier error en las letras del nombre: confirma el RFC contra tu Cédula de Datos Fiscales."
       }
     },
     {
@@ -33,11 +38,15 @@
         "en": "CURP",
         "es": "CURP"
       },
-      "format": "^[A-Z][AEIOUX][A-Z]{2}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$",
+      "format": "^[A-Z][AEIOUX][A-Z]{2}[0-9]{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12][0-9]|3[01])[HM](?:AS|BC|BS|CC|CL|CM|CS|CH|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[A-Z]{3}[A-Z0-9][0-9]$",
+      "scope": "personal",
       "checksum": {
-        "engine": "structural"
+        "engine": "unimplemented"
       },
-      "optional": true
+      "note": {
+        "en": "Structure is checked: the date and the two-letter entity code both have to be real. The eighteenth character is a published RENAPO check digit, and this app deliberately does not enforce it — legacy issuances are known not to satisfy it, and calling a real CURP broken is worse than not checking it.",
+        "es": "Se comprueba la estructura: la fecha y el código de entidad de dos letras tienen que existir. El carácter dieciocho es un dígito verificador publicado por RENAPO y esta app no lo exige a propósito: se sabe que registros antiguos no lo cumplen, y llamar rota una CURP real es peor que no comprobarla."
+      }
     }
   ],
   "invoiceProfile": {
@@ -49,6 +58,7 @@
         "cp"
       ],
       "optional": [
+        "curp",
         "usoCFDI",
         "email"
       ]

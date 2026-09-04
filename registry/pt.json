@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "Autoridade Tributária e Aduaneira",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://www.portaldasfinancas.gov.pt/"
+    "on": "2026-09-03",
+    "src": "https://info.portaldasfinancas.gov.pt/pt/destaques/Paginas/Atribuicao_Nova_Gama_de_NIF_a_Pessoas_Singulares.aspx",
+    "note": "A published notice from the AT's Direção de Serviços de Registo de Contribuintes, on the authority's own information portal, announcing the move to the new NIF range. It states the structure — nine digits, the first eight sequential and the last a dígito de controlo — which is the shape this record's format encodes. The AT publishes no weights or modulus, so those parameters are conventional rather than cited."
   },
   "identifiers": [
     {
@@ -13,12 +14,28 @@
         "en": "NIF"
       },
       "format": "^[0-9]{9}$",
+      "scope": "both",
       "checksum": {
-        "engine": "structural"
+        "engine": "mod11-weighted",
+        "weights": [
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "map": "lt2-zero"
       },
+      "denied": [
+        "000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "The ninth digit is a modulus 11 over the eight before it, weighted 9 down to 2."
+      },
+      "display": "### ### ###"
     }
   ],
   "invoiceProfile": {

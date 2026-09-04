@@ -12,22 +12,31 @@
       "label": {
         "en": "Business Number"
       },
-      "format": "^[0-9]{9}(RT[0-9]{4})?$",
+      "format": "^[0-9]{9}(R[CMPRTZ][0-9]{4})?$",
+      "scope": "business",
       "checksum": {
-        "engine": "structural"
+        "engine": "luhn-modN",
+        "alphabet": "0123456789",
+        "base": 10,
+        "length": 9
       },
+      "denied": [
+        "000000000"
+      ],
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "The ninth digit is a Luhn check over the eight before it. A two-letter program account — RT for GST/HST, RC, RM, RP, RR or RZ — can be appended with its four-digit reference and takes no part in the check, so only the leading nine digits are verified. Do not type a Social Insurance Number here. A SIN is also nine digits closed by the same Luhn check, so no rule could tell one from the other without calling real Business Numbers invalid; nothing in this app asks for a SIN and no card has a place to keep one.",
+        "fr": "Le neuvième chiffre est une clé de Luhn portant sur les huit précédents. Un compte de programme à deux lettres — RT pour la TPS/TVH, RC, RM, RP, RR ou RZ — peut être ajouté avec sa référence à quatre chiffres; il n'entre pas dans le calcul, seuls les neuf premiers chiffres sont vérifiés. N'inscrivez pas ici un numéro d'assurance sociale. Le NAS compte lui aussi neuf chiffres fermés par la même clé de Luhn : aucune règle ne pourrait les distinguer sans rejeter de vrais numéros d'entreprise. Cette application ne demande jamais de NAS et aucune carte ne prévoit de case pour en conserver un."
+      },
+      "display": "#########RT####"
     }
   ],
   "invoiceProfile": {
     "personal": {
       "required": [
-        "bn",
         "legalName"
       ],
       "optional": [
+        "bn",
         "email",
         "address"
       ]

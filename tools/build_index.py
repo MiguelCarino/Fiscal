@@ -28,7 +28,7 @@ TIER1 = {"MX", "CO", "US"}
 # No invoice-profile guarantees.
 TIER2 = {
     "BR", "AR", "CL", "PE", "IN", "JP", "AU", "FR", "GR", "BE",
-    "DE", "ES", "IT", "NL", "PT", "GB", "CA", "ZA",
+    "DE", "ES", "IT", "NL", "PT", "PL", "GB", "CA", "ZA",
 }
 
 
@@ -54,11 +54,27 @@ def main() -> int:
         "note": "Names are localised at runtime by Intl.DisplayNames; `name` is the fallback only.",
         "countries": countries,
     }
+    # `generated` records when the jurisdictions last moved, not when somebody
+    # last ran this. Stamping today's date over an identical list rewrites the
+    # bytes, and sw.js hashes the bytes it precaches, so a run that changed
+    # nothing would still ship every existing install a new version of a file
+    # nothing in it changed. Regenerating an unchanged list is a no-op.
+    body = {k: v for k, v in payload.items() if k != "generated"}
+    if OUT.exists():
+        try:
+            before = json.loads(OUT.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+            before = None
+        if isinstance(before, dict) and {k: v for k, v in before.items()
+                                         if k != "generated"} == body:
+            payload["generated"] = before.get("generated", payload["generated"])
+
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     counts = {t: sum(1 for c in countries if c["tier"] == t) for t in (1, 2, 3)}
     print(f"wrote {OUT.relative_to(OUT.parent.parent)} — "
-          f"{len(countries)} countries (tier 1: {counts[1]}, tier 2: {counts[2]}, tier 3: {counts[3]})")
+          f"{len(countries)} countries (tier 1: {counts[1]}, tier 2: {counts[2]}, tier 3: {counts[3]}) "
+          f"· generated {payload['generated']}")
     return 0
 
 

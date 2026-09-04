@@ -3,8 +3,9 @@
   "tier": 2,
   "authority": "AEAT — Agencia Tributaria",
   "verified": {
-    "on": "2026-09-02",
-    "src": "https://sede.agenciatributaria.gob.es/"
+    "on": "2026-09-03",
+    "src": "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-01-solicitud-nif-documentacion-aportar/informacion-sobre-numero-identificacion-fiscal/composicion-nif/personas-fisicas.html",
+    "note": "AEAT publishes the composition here: for a Spanish national “ocho dígitos (teniendo en cuenta que los primeros pueden ser ceros) más una letra de control”, and for the K and L forms “una letra inicial… siete caracteres alfanuméricos… un carácter de verificación alfabético”. That is the nine-character shape this record's format encodes. The page publishes the composition; it does not publish the letter's arithmetic."
   },
   "identifiers": [
     {
@@ -13,12 +14,18 @@
         "en": "NIF"
       },
       "format": "^[0-9A-Z][0-9]{7}[0-9A-Z]$",
+      "scope": "both",
       "checksum": {
-        "engine": "structural"
+        "engine": "es-nif"
       },
       "note": {
-        "en": "Structure only. No published check-digit rule is implemented for this identifier yet — the badge says 'format only' rather than implying a verification that did not happen."
-      }
+        "en": "One engine for all three shapes AEAT issues: the DNI's letter over the eight digits, the NIE's letter with X, Y or Z folded to 0, 1 or 2 first, and the legal-entity NIF whose final character is a digit for some letter classes and a letter for others. They are one identifier to the holder and one field on the card, so they are one engine here."
+      },
+      "denied": [
+        "00000000T",
+        "X0000000T",
+        "A00000000"
+      ]
     }
   ],
   "invoiceProfile": {

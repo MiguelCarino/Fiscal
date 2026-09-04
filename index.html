@@ -2,23 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- GitHub Pages cannot set headers, so the policy ships in the document. It
+       is what turns "we read the code and found no egress" into something the
+       browser enforces on every future edit: no third-party origin can be
+       reached, and the only script that may run is one served from here. The
+       hash covers the registration block at the foot of this file — change a
+       byte of it and the hash must be recomputed or the service worker, and
+       with it the offline promise, silently stops registering. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-eeGMqkswBxO9floUJRxZQC9nAIIqvWUDax2KhET7Ac8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/webp" href="logo.webp">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#050505">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fiscal">
   <title>Carino Fiscal — your tax identity, offline, in any country</title>
   <meta name="description" content="An offline card that holds your fiscal identity — personal and business — for every jurisdiction you file in. Check digits validated on device, spelled out phonetically for the counter, and never sent anywhere.">
 
   <link rel="stylesheet" href="fonts/carino-fonts.css">
 
   <style>
+    /* Every colour the app draws with is declared here, on bare :root, before
+       any media block narrows it — so the un-stamped system default renders the
+       same palette as an explicit choice, and no token exists only inside a
+       query. color-scheme tells the UA to draw its own widgets (file buttons,
+       the search field's clear affordance, form chrome) dark, instead of
+       dropping a light control into the middle of a black dialog. */
     :root{
+      color-scheme:dark;
       --accent:#eab308; --accent-faint:rgba(234,179,8,0.05); --accent-glow:rgba(234,179,8,0.15);
       --accent-dim:rgba(234,179,8,0.30); --primary-hover:#fbbf24;
       --bg:#050505; --bg-elev:#0d0d0d; --bg-card:#0b0b0b;
-      --text:#fff; --text-sec:#a3a3a3; --text-muted:#666;
-      --border:#262626;
+      /* --text-muted carries the country on every tile, the field name beside
+         every identifier and the whole privacy block. None of that is
+         decoration, so it is held to the body-text floor rather than to the
+         3:1 one, and sits one step below --text-sec instead of far below it. */
+      --text:#fff; --text-sec:#a3a3a3; --text-muted:#8a8a8a;
+      /* --border draws decoration — dividers, the edges of surfaces. A control's
+         own outline is held to 3:1 by 1.4.11 and needs --border-ui; #262626 is
+         1.3:1 and cannot carry one. */
+      --border:#262626; --border-ui:#5f5f5f;
       --ok:#22c55e; --err:#ef4444; --warn:#eab308; --info:#38bdf8;
+      /* The caveat must not be quieter than the reassurance: "format only"
+         reads at 13.5:1, the same order as "check digit valid" at 8.6:1. */
+      --ochre-warn:#fcd34d;
+      /* --err is a border and a hover hue. As TEXT on this ground it reads at
+         5.4:1 — below the green that means "checked out" and far below the
+         ochre that means "nobody checked", which put the verdict this app most
+         needs a reader to see at the bottom of the pile. Red says "wrong"
+         before it is read, but only if it is not the faintest thing on the
+         card. #fca5a5 is the red this file already uses for error text and it
+         reads at 10.7:1, above the green; the remaining gap to the ochre is
+         closed by weight and by the ✕, the way the print sheet closes it with
+         a heavy box. */
+      --err-text:#fca5a5;
+      /* The editor states a verdict as one line of running text with no glyph
+         beside it and no card around it, so weight and the ✕ have nothing to
+         push against and the ochre would simply out-read the red. This is the
+         red for that case: 14.9:1, above the ochre's 13.7:1, so the number this
+         app is calling wrong is never the fainter of the two. */
+      --err-loud:#fed7d7;
       /* One colour per card kind. Business takes the house gold because
          invoicing is what this tool is mostly for; personal takes the cool
          counterpart already in the palette. They are category colours, kept
@@ -32,10 +80,23 @@
       --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
       --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
       --display:'Red Hat Display',var(--sans);
-      --fs-micro:0.6rem; --fs-label:0.65rem; --fs-btn:0.7rem; --fs-sm:0.8rem;
+      /* --fs-micro sets the field labels and the validation badges, which are
+         read off a screen held out across a counter, not up close. */
+      --fs-micro:0.7rem; --fs-label:0.75rem; --fs-btn:0.7rem; --fs-sm:0.8rem;
       --fs-mono:0.85rem; --fs-sec:0.9rem; --fs-body:1rem; --fs-lg:1.05rem;
       --fs-h3:1.2rem; --fs-h2:1.5rem; --fs-h1:1.9rem;
       --radius:10px;
+      --gutter:20px;
+    }
+    /* Someone who has told their OS they need more contrast gets it without
+       giving up the palette: the same hues, lifted. */
+    @media (prefers-contrast: more){
+      :root{
+        --text-sec:#d4d4d4; --text-muted:#bdbdbd;
+        --border:#5f5f5f; --border-ui:#8a8a8a;
+        --accent-faint:rgba(234,179,8,0.16); --accent-dim:rgba(234,179,8,0.70);
+        --ochre-warn:#fde68a; --err-text:#fecaca; --err-loud:#fee2e2;
+      }
     }
     *{box-sizing:border-box;}
     /* The UA's [hidden] rule is a plain `display:none` and loses to any author
@@ -44,10 +105,10 @@
        Toggle visibility with el.hidden and let this rule win. */
     [hidden]{display:none!important;}
     html{scroll-behavior:smooth;}
-    :root{scrollbar-width:thin;scrollbar-color:#3a3a3a transparent;}
+    :root{scrollbar-width:thin;scrollbar-color:var(--border-ui) transparent;}
     ::-webkit-scrollbar{width:8px;height:8px;}
     ::-webkit-scrollbar-track{background:transparent;}
-    ::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:6px;}
+    ::-webkit-scrollbar-thumb{background:var(--border-ui);border-radius:6px;}
     ::-webkit-scrollbar-thumb:hover{background:var(--accent-dim);}
     body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
       font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
@@ -55,15 +116,32 @@
     a:hover{color:var(--primary-hover);}
     button{font-family:inherit;}
     :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    /* Headings are tagged for the rotor, not for the UA's type scale — every
+       size in this file is set by class. */
+    h1,h2,h3{margin:0;font-size:inherit;font-weight:inherit;}
+    p{margin:0;}
 
-    .wrap{max-width:900px;margin:0 auto;padding:0 20px 100px;}
+    /* Off screen until focused, which is the only way a bypass link is worth the
+       tab stop it costs. It is put back in front of the injected header at the
+       foot of this file. */
+    .skip{position:absolute;left:-9999px;top:auto;}
+    .skip:focus{position:fixed;left:10px;top:10px;z-index:2147483001;
+      background:var(--accent);color:#050505;font-family:var(--mono);
+      font-size:var(--fs-btn);font-weight:700;text-transform:uppercase;
+      letter-spacing:0.06em;padding:10px 14px;border-radius:6px;}
+
+    .wrap{max-width:900px;margin:0 auto;padding:0 var(--gutter) 100px;}
 
     /* ---------- masthead ---------- */
     /* The navbar already says FISCAL, so the page does not need to shout it
        again. Counter mode is the product: the hero's job is to stay small and
-       leave the card above the fold. */
-    .mast{border-bottom:1px solid var(--border);margin:0 -20px 26px;
-      padding:26px 20px 20px;display:flex;flex-direction:column;gap:7px;}
+       leave the card above the fold. The gold kicker over the stage gradient is
+       the fleet's landing signature, carried at the smallest size that reads. */
+    .mast{background:var(--stage-grad);border-bottom:1px solid var(--border);
+      margin:0 calc(-1 * var(--gutter)) 26px;
+      padding:26px var(--gutter) 20px;display:flex;flex-direction:column;gap:7px;}
+    .mast .kicker{margin:0 0 2px;font-family:var(--mono);font-size:var(--fs-btn);
+      font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:var(--accent);}
     .mast .lede{margin:0;font-family:var(--display);font-weight:700;
       font-size:clamp(1.25rem,3.4vw,1.7rem);line-height:1.25;letter-spacing:-0.01em;
       max-width:34ch;text-wrap:balance;}
@@ -75,8 +153,8 @@
     /* ---------- alerts ---------- */
     .alert{border:1px solid;border-radius:8px;padding:12px 14px;font-family:var(--mono);
       font-size:var(--fs-sm);line-height:1.5;margin-bottom:14px;}
-    .alert.warn{color:#fcd34d;background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.45);}
-    .alert.err{color:#fca5a5;background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.5);}
+    .alert.warn{color:var(--ochre-warn);background:rgba(234,179,8,0.08);border-color:rgba(234,179,8,0.6);}
+    .alert.err{color:var(--err-text);background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.7);}
 
     /* ---------- pills ---------- */
     .pill{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;
@@ -88,69 +166,71 @@
     /* ---------- buttons ---------- */
     .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
       font-size:var(--fs-btn);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;
-      padding:0 16px;height:38px;border-radius:6px;cursor:pointer;border:1px solid var(--border);
+      padding:0 16px;height:38px;border-radius:6px;cursor:pointer;border:1px solid var(--border-ui);
       background:transparent;color:var(--text-sec);transition:0.18s;}
-    .btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
+    /* Hover is a promise that a press will do something, so it belongs to the
+       controls that can be pressed. Every .btn on this page is a <button>. */
+    .btn:enabled:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
     .btn-primary{background:var(--accent);border-color:var(--accent);color:#050505;}
-    .btn-primary:hover{background:var(--primary-hover);color:#050505;box-shadow:0 4px 16px var(--accent-glow);}
-    .btn-ghost{border-color:transparent;}
-    .btn-ghost:hover{border-color:var(--border);background:transparent;color:var(--text);}
-
-    /* ---------- jurisdiction bar ---------- */
-    .jbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-      border-bottom:1px solid var(--border);padding-bottom:14px;}
-    .j-flag{font-size:1.7rem;line-height:1;}
-    .j-name{font-family:var(--display);font-weight:800;font-size:var(--fs-h2);
-      text-transform:uppercase;letter-spacing:0.5px;flex:1;min-width:120px;}
-    .j-change{margin-left:auto;}
-    .jauth{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
-      margin-top:8px;letter-spacing:0.04em;}
-
-    /* ---------- kind tabs ---------- */
-    .kindtabs{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;
-      border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-    .kindtab{display:flex;flex-direction:column;gap:3px;align-items:flex-start;
-      padding:11px 14px;background:var(--bg-elev);border:0;border-right:1px solid var(--border);
-      cursor:pointer;text-align:left;transition:0.18s;}
-    .kindtab:last-child{border-right:0;}
-    .kindtab:hover{background:#141414;}
-    .kindtab.on{background:var(--accent-faint);box-shadow:inset 0 -2px 0 var(--accent);}
-    .kt-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.14em;
-      text-transform:uppercase;color:var(--text-muted);}
-    .kindtab.on .kt-k{color:var(--accent);}
-    .kt-n{font-size:var(--fs-sec);color:var(--text-sec);}
-    .kindtab.on .kt-n{color:var(--text);}
+    .btn-primary:enabled:hover{background:var(--primary-hover);color:#050505;box-shadow:0 4px 16px var(--accent-glow);}
+    /* Save is disabled while the box holds a number this app refuses to keep,
+       and the reason is spelled out in the block above it. All this has to do
+       is stop the button looking like one that would work. */
+    .btn:disabled{opacity:0.5;cursor:not-allowed;}
+    /* A ghost button is the quiet one by colour, not by giving up its edge: a
+       control whose boundary the eye cannot find is the 1.4.11 case, and these
+       three sit on the privacy panel where the stakes are highest. */
+    .btn-ghost{color:var(--text-muted);}
+    /* Erasing every card is the one action in the app with no undo. */
+    .btn-danger{color:var(--err-text);}
+    .btn-danger:enabled:hover{border-color:var(--err);color:var(--err-text);background:rgba(239,68,68,0.10);}
 
     /* ---------- the card face ---------- */
-    .face{border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px;
-      background:var(--bg-card);padding:22px 20px;display:flex;flex-direction:column;gap:20px;}
     .f{display:flex;flex-direction:column;gap:5px;}
     .f-head{display:flex;align-items:baseline;gap:10px;}
     .f-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.14em;
       text-transform:uppercase;color:var(--text-muted);flex:1;}
     .f-copy{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
-      text-transform:uppercase;background:transparent;border:1px solid var(--border);
+      text-transform:uppercase;background:transparent;border:1px solid var(--border-ui);
       color:var(--text-muted);border-radius:4px;padding:2px 7px;cursor:pointer;transition:0.15s;}
     .f-copy:hover{border-color:var(--accent);color:var(--accent);}
     .f-copy.copied{border-color:var(--ok);color:var(--ok);}
+    /* break-all belongs to an unbroken identifier, not to a legal name or a
+       régimen label — those shattered mid-word on a phone. Only the lead row is
+       guaranteed to be the identifier. `anywhere` still hard-breaks a 42
+       character run, so a long secondary value cannot widen the card. */
     .f-v{font-family:var(--mono);font-weight:700;font-size:2rem;letter-spacing:0.07em;
-      line-height:1.15;word-break:break-all;}
-    .f-v--sm{font-size:var(--fs-lg);font-weight:500;letter-spacing:0.02em;}
+      line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+    .f--lead .f-v{word-break:break-all;}
+    /* A secondary value is not what the card is held up for: it gives back the
+       lead row's size and weight so one number stays the heavy thing on screen. */
+    .f-v--sm{font-size:var(--fs-lg);font-weight:400;letter-spacing:0.02em;}
     .f-badge{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.08em;
       text-transform:uppercase;}
-    .f-badge.ok{color:var(--ok);} .f-badge.err{color:var(--err);} .f-badge.warn{color:var(--text-muted);}
+    /* Three verdicts, three glyphs, three colours — and the one that says the
+       number is wrong also carries the weight, so it is never the quietest of
+       the three on a screen held out across a counter. */
+    .f-badge.ok{color:var(--ok);} .f-badge.err{color:var(--err-text);font-weight:700;}
+    .f-badge.warn{color:var(--ochre-warn);}
     .f-badge.ok::before{content:"✓ ";} .f-badge.err::before{content:"✕ ";}
+    .f-badge.warn::before{content:"! ";}
     .f-phon{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.5;
       border-left:2px solid var(--accent-dim);padding-left:10px;margin-top:3px;}
     .f-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
       line-height:1.6;border-top:1px solid var(--border);padding-top:14px;}
+    /* The caveat that qualifies a green badge — how far the pass actually goes.
+       A footnote under a rule is what the eye skips; this belongs to the badge
+       it narrows, so it takes the staleness line's voice instead and drops the
+       separator that would file it away with the small print. */
+    .f-note.f-weak{color:var(--ochre-warn);border-top:0;padding-top:0;
+      border-left:2px solid rgba(234,179,8,0.5);padding-left:10px;}
     .qr-open{align-self:flex-start;}
 
     .banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
     .banner span{flex:1;min-width:200px;}
 
     /* Tax data goes stale silently; this is the only place the app nags. */
-    .f-stale{font-family:var(--mono);font-size:var(--fs-micro);color:var(--ochre-warn,#fcd34d);
+    .f-stale{font-family:var(--mono);font-size:var(--fs-micro);color:var(--ochre-warn);
       border-left:2px solid rgba(234,179,8,0.5);padding-left:10px;line-height:1.6;}
     .f-einv{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);
       padding-top:14px;}
@@ -167,14 +247,60 @@
       border:1px solid var(--border);border-radius:8px;padding:14px;background:var(--bg-elev);}
     .ed-import .textarea{min-height:52px;}
 
+    /* ---------- import review ---------- */
+    /* Nothing a document said reaches a card without passing through here, so
+       the pane sits above the form rather than beside it. */
+    .review{border:1px solid var(--accent-dim);border-radius:8px;padding:14px;
+      margin-bottom:20px;background:var(--bg-elev);}
+    .rv-t{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
+      line-height:1.2;margin-bottom:4px;}
+    .rv-d{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      margin:0 0 12px;line-height:1.6;}
+    .rv-problem{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ochre-warn);
+      line-height:1.6;margin-bottom:12px;}
+    .rv-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;
+      border-top:1px solid var(--border);}
+    .rv-row input[type=checkbox]{margin:3px 0 0;width:16px;height:16px;flex:none;
+      accent-color:var(--accent);}
+    .rv-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+    .rv-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--text-muted);}
+    .rv-v{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text);
+      overflow-wrap:anywhere;}
+    .rv-seen{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);}
+    .rv-why{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.55;}
+    /* A blocked candidate is struck out and un-tickable: colour alone never says
+       this value cannot be used. */
+    .rv-row.blocked .rv-v{text-decoration:line-through;color:var(--text-muted);}
+    .rv-row.blocked .rv-why{color:var(--err-text);}
+    .rv-notes{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      line-height:1.7;margin-top:12px;}
+    .rv-missing{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      line-height:1.7;margin-top:8px;}
+    .rv-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+
     /* share */
+    /* Which payload the QR carries is one choice out of three, and the browser
+       states it better than the app can: a native radio group carries the
+       selection into the accessibility tree, moves it with the arrow keys and
+       cannot fall out of step with the highlight, because no script maintains
+       either. The input is off-screen; the label is the tab. */
     .shr-tabs{display:flex;gap:6px;margin-bottom:14px;}
-    .shr-tab{flex:1;font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
-      text-transform:uppercase;background:transparent;border:1px solid var(--border);
-      color:var(--text-muted);border-radius:6px;padding:7px 8px;cursor:pointer;transition:0.15s;}
+    .shr-r{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
+      overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+    .shr-tab{flex:1;display:block;text-align:center;font-family:var(--mono);
+      font-size:var(--fs-micro);letter-spacing:0.1em;text-transform:uppercase;
+      background:transparent;border:1px solid var(--border-ui);color:var(--text-muted);
+      border-radius:6px;padding:7px 8px;cursor:pointer;transition:0.15s;}
     .shr-tab:hover{border-color:var(--accent);color:var(--accent);}
-    .shr-tab.on{border-color:var(--accent);color:var(--accent);background:var(--accent-faint);}
-    #shareQr{display:flex;justify-content:center;padding:14px;background:#fff;border-radius:8px;}
+    .shr-r:checked+.shr-tab{border-color:var(--accent);color:var(--accent);
+      background:var(--accent-faint);box-shadow:inset 0 -2px 0 var(--accent);}
+    .shr-r:focus-visible+.shr-tab{outline:2px solid var(--accent);outline-offset:2px;}
+    /* The canvas arrives sized to a whole number of pixels per module and sets
+       its own max-width; resampling it is what makes a QR undecodable. Give the
+       container the overflow and never touch the bitmap. */
+    #shareQr{display:flex;justify-content:center;padding:14px;background:#fff;
+      border-radius:8px;overflow:auto;}
     #shareQr canvas{display:block;image-rendering:pixelated;}
     #shareWhat{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
       line-height:1.6;margin-top:12px;}
@@ -185,24 +311,29 @@
 
     #bigSpeak{margin-right:8px;}
 
-    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-
-    /* ---------- empty / example ---------- */
-    .empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;}
+    /* ---------- empty state ---------- */
+    /* First run is the weakest screen in the app: it should say what this is
+       for before it shows a sample of it. */
+    .empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;
+      margin-top:18px;}
     .empty-t{font-family:var(--display);font-weight:700;font-size:var(--fs-h3);}
     .empty-d{color:var(--text-sec);font-size:var(--fs-sec);max-width:52ch;}
-    .empty .btn{margin-top:6px;}
-    .example{margin-top:20px;border:1px dashed var(--border);border-radius:8px;
-      padding:16px;width:100%;display:flex;flex-direction:column;gap:6px;}
     .example-tag{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.16em;
       text-transform:uppercase;color:var(--text-muted);}
 
     /* ---------- the wall ---------- */
     .wall{margin-top:4px;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));
+    /* A bare minmax(238px,…) floor is wider than the column once the page is
+       zoomed past 200%, and the wall then scrolls sideways as well as down —
+       the one direction a reader who has zoomed in cannot follow. min() lets
+       the track give up its floor at that point and changes nothing above it. */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(238px,100%),1fr));
       gap:12px;margin-top:18px;}
+    /* A tile is a button, not a panel: its edge is what says where one card ends
+       and the next begins, so it takes the control outline rather than the
+       decorative one. */
     .tile{position:relative;display:flex;flex-direction:column;gap:9px;text-align:left;
-      background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+      background:var(--bg-card);border:1px solid var(--border-ui);border-radius:12px;
       padding:17px 16px 14px;cursor:pointer;transition:0.2s;overflow:hidden;
       color:var(--text);font-family:inherit;}
     .tile::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
@@ -220,7 +351,8 @@
     .t-label{font-family:var(--display);font-weight:700;font-size:var(--fs-lg);
       line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .t-id{font-family:var(--mono);font-size:var(--fs-mono);color:var(--text-sec);
-      letter-spacing:0.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      letter-spacing:0.04em;font-variant-numeric:tabular-nums;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;}
     .t-foot{display:flex;align-items:center;gap:8px;margin-top:2px;}
     .t-kind{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
       text-transform:uppercase;color:var(--kind);border:1px solid var(--kind);
@@ -231,7 +363,7 @@
       background:var(--warn);margin-right:6px;vertical-align:middle;}
 
     .tile.add{align-items:flex-start;justify-content:center;border-style:dashed;
-      background:transparent;--kind:var(--border);--kind-soft:transparent;min-height:130px;}
+      background:transparent;--kind:var(--border-ui);--kind-soft:transparent;min-height:130px;}
     .tile.add:hover{border-color:var(--accent);--kind:var(--accent);}
     .tile.add .t-label{color:var(--text-sec);}
 
@@ -249,6 +381,8 @@
     #cardDlg[data-kind="personal"]{border-top:3px solid var(--kind-personal);}
     #cardDlg[data-kind="business"]{border-top:3px solid var(--kind-business);}
     .detail-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center;}
+    .jauth{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+      letter-spacing:0.04em;}
     #detailFields{display:flex;flex-direction:column;gap:20px;}
     .detail-addr{margin-top:20px;border-top:1px solid var(--border);padding-top:14px;
       display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
@@ -259,7 +393,7 @@
       border-radius:6px;padding:7px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     /* Actions stay out of the scrolling body: Counter mode is the reason the
        popup is open, and it must never be below the fold. */
-    .detail-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:stretch;}
+    .detail-acts{display:flex;flex-wrap:wrap;gap:8px;}
     /* Let the row wrap to a second line rather than wrapping the label inside
        a button — "Counter mode" on two lines reads as a mistake. */
     .detail-acts .btn{flex:1;justify-content:center;min-width:112px;white-space:nowrap;}
@@ -272,16 +406,6 @@
     .panel-title{font-family:var(--display);font-weight:900;font-size:var(--fs-h1);
       text-transform:uppercase;letter-spacing:1px;}
     .panel-desc{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-sec);margin-top:6px;}
-    .crows{display:flex;flex-direction:column;margin-top:6px;}
-    .crow{display:flex;align-items:center;gap:12px;padding:12px 4px;background:transparent;
-      border:0;border-bottom:1px solid var(--border);cursor:pointer;text-align:left;
-      color:var(--text);transition:0.15s;}
-    .crow:hover{background:var(--accent-faint);}
-    .c-flag{font-size:1.2rem;}
-    .c-name{flex:1;font-size:var(--fs-sec);}
-    .c-kind{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
-      text-transform:uppercase;color:var(--text-muted);}
-    .c-iso{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);}
 
     .privacy{margin-top:34px;border-top:1px solid var(--border);padding-top:20px;
       font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);line-height:1.75;}
@@ -289,52 +413,129 @@
     .privacy .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
     .privacy .row::before{content:"—";color:var(--accent);}
     .privacy .tools{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
+    /* Ready, not ready and not known are three states, and the third one shows
+       nothing at all: app.js leaves the span empty and the row below costs
+       nothing while it is. */
+    #offlineState.ready{color:var(--ok);}
+    #offlineState.pending{color:var(--ochre-warn);}
+    /* A live region has to be sitting in the accessibility tree, and empty,
+       before its text arrives — a region that is unhidden and filled in the same
+       breath is one most screen readers never announce. So this row is never
+       hidden and app.js only ever writes into the span; it is the dash and the
+       space it costs that go while there is nothing to say. */
+    .privacy .row:has(#offlineState:empty){margin-bottom:0;}
+    .privacy .row:has(#offlineState:empty)::before{content:none;}
+
+    /* ---------- update bar ---------- */
+    .updatebar{position:fixed;left:12px;right:12px;bottom:12px;z-index:2147482000;
+      display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+      background:var(--bg-elev);border:1px solid var(--accent-dim);border-radius:10px;
+      padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,0.7);
+      font-family:var(--mono);font-size:var(--fs-sm);color:var(--text);
+      max-width:640px;margin:0 auto;}
+    .updatebar .ub-warn{flex-basis:100%;font-size:var(--fs-micro);color:var(--ochre-warn);}
+    .updatebar .btn{margin-left:auto;}
+    .updatebar .ub-x{margin-left:0;padding:0 10px;}
 
     /* ---------- dialogs ---------- */
     dialog{background:var(--bg-card);color:var(--text);border:1px solid var(--border);
       border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);
       box-shadow:0 24px 60px rgba(0,0,0,0.7);}
+    /* Scoped to [open] on purpose: an author `display` on a bare `dialog`
+       selector beats the UA's `dialog:not([open]){display:none}` and paints
+       every closed dialog into the page. The column flex is what keeps the
+       action row inside the dialog's own box at 200% zoom, instead of pushing
+       it below the viewport behind a second, nested scrollbar. */
+    dialog[open]{display:flex;flex-direction:column;max-height:calc(100dvh - 2em);}
     dialog::backdrop{background:rgba(0,0,0,0.72);}
     .dlg-head{display:flex;align-items:center;gap:12px;padding:16px 18px;
-      border-bottom:1px solid var(--border);}
+      border-bottom:1px solid var(--border);flex:none;}
     .dlg-title{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
       text-transform:uppercase;letter-spacing:0.5px;flex:1;}
-    .dlg-x{background:transparent;border:1px solid var(--border);color:var(--text-muted);
-      border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:1rem;line-height:1;}
+    .dlg-x{background:transparent;border:1px solid var(--border-ui);color:var(--text-muted);
+      border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:1rem;line-height:1;flex:none;}
     .dlg-x:hover{border-color:var(--accent);color:var(--accent);}
-    .dlg-body{padding:18px;max-height:min(68vh,620px);overflow-y:auto;}
+    .dlg-body{--dlg-pad:18px;padding:var(--dlg-pad);flex:1 1 auto;min-height:0;
+      max-height:min(68vh,620px);overflow-y:auto;}
     .dlg-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;
-      border-top:1px solid var(--border);}
+      border-top:1px solid var(--border);flex:none;}
     .dlg-foot .left{margin-right:auto;}
 
-    .input,.select,.textarea{background:var(--bg-elev);border:1px solid var(--border);
+    .input,.select,.textarea{background:var(--bg-elev);border:1px solid var(--border-ui);
       border-radius:6px;color:var(--text);font-family:var(--mono);font-size:var(--fs-sm);
       padding:9px 11px;width:100%;transition:0.15s;}
-    .input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--accent);
+    /* No outline:none here — the global :focus-visible ring is the only focus
+       indicator on this page thick enough to find at arm's length, and a rule
+       on :focus outranks it for keyboard users too. The gold border and the
+       faint glow stay underneath as decoration. */
+    .input:focus,.select:focus,.textarea:focus{border-color:var(--accent);
       box-shadow:0 0 0 3px var(--accent-faint);}
     .textarea{resize:vertical;min-height:70px;}
-    .select option{background:#111;}
+    .select option{background:var(--bg-elev);color:var(--text);}
+    /* The UA draws this button itself, and unstyled it is the loudest object on
+       an otherwise black dialog. */
+    .input[type=file]::file-selector-button{font-family:var(--mono);font-size:var(--fs-btn);
+      text-transform:uppercase;letter-spacing:0.08em;background:transparent;
+      border:1px solid var(--border-ui);color:var(--text-sec);border-radius:4px;
+      padding:4px 10px;margin-right:10px;cursor:pointer;transition:0.15s;}
+    .input[type=file]::file-selector-button:hover{border-color:var(--accent);color:var(--accent);}
 
     .ed-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
-    .ed-k{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;
+    .ed-k{font-family:var(--mono);font-size:var(--fs-label);text-transform:uppercase;
       letter-spacing:0.1em;color:var(--text-muted);}
     .ed-hint{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.06em;
       text-transform:uppercase;color:var(--text-muted);min-height:12px;}
-    .ed-hint.ok{color:var(--ok);} .ed-hint.err{color:var(--err);} .ed-hint.warn{color:var(--text-muted);}
+    .ed-hint.ok{color:var(--ok);} .ed-hint.err{color:var(--err-loud);}
+    .ed-hint.warn{color:var(--ochre-warn);}
+    /* The card face separates the three verdicts with a glyph and the print
+       sheet with a box; this line had only hue, which is no separation at all
+       for the reader most likely to be looking at it while the app tells them
+       their tax number is wrong. It now carries both, escalating the way paper
+       does: nothing, a dashed rule, a heavy solid one in bold. The box is held
+       off an empty hint so the row keeps its reserved height without drawing an
+       outline around no verdict. */
+    .ed-hint.ok:not(:empty)::before{content:"✓ ";}
+    .ed-hint.warn:not(:empty)::before{content:"! ";}
+    .ed-hint.err:not(:empty)::before{content:"✕ ";}
+    .ed-hint.warn:not(:empty),.ed-hint.err:not(:empty){display:inline-block;
+      align-self:flex-start;border:1px dashed currentColor;border-radius:4px;
+      padding:3px 8px;}
+    .ed-hint.err:not(:empty){border-width:2px;border-style:solid;font-weight:700;}
     .ed-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);line-height:1.6;}
     .ed-link{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:0.1em;}
+    .ed-check{display:flex;align-items:center;gap:9px;font-family:var(--mono);
+      font-size:var(--fs-sm);color:var(--text-sec);cursor:pointer;margin-bottom:14px;}
+    .ed-check input{width:16px;height:16px;accent-color:var(--accent);}
     .refused{border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.06);
       border-radius:8px;padding:12px 14px;margin-bottom:16px;}
     .refused-t{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
-      text-transform:uppercase;color:#fca5a5;margin-bottom:6px;}
+      text-transform:uppercase;color:var(--err-text);margin-bottom:6px;}
     .refused-d{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.6;}
+    /* Every other .refused block explains something the app has already decided.
+       This one is a question with no undo behind either answer, so it takes the
+       full-strength edge. app.js gives it focus to read the question out, and a
+       tabindex=-1 container never matches :focus-visible — without this the one
+       element on screen asking would take focus with nothing to show for it. */
+    .ed-confirm{border-color:var(--err);}
+    .ed-confirm:focus{outline:2px solid var(--err);outline-offset:2px;}
 
     /* picker */
+    /* The search box and the count are the only things that say the list is cut
+       to 120 rows, and a strip that scrolls away says it once and then stops.
+       The negative margins cancel the body's padding so no row slides past the sides
+       of the pinned strip, and `top` cancels them again: sticky constrains the
+       MARGIN box, so top:0 would park the strip one padding below the scrollport
+       and let rows show through the gap above it. */
+    #pickerTop{position:sticky;top:calc(-1 * var(--dlg-pad));z-index:2;
+      background:var(--bg-card);
+      margin:calc(-1 * var(--dlg-pad)) calc(-1 * var(--dlg-pad)) 0;
+      padding:var(--dlg-pad) var(--dlg-pad) 8px;}
     .prow{display:flex;align-items:center;gap:10px;width:100%;padding:9px 8px;
       background:transparent;border:0;border-bottom:1px solid var(--border);cursor:pointer;
       color:var(--text);text-align:left;transition:0.12s;}
     .prow:hover{background:var(--accent-faint);}
-    .prow.on{background:var(--accent-faint);box-shadow:inset 2px 0 0 var(--accent);}
+    .prow.on{background:var(--accent-faint);box-shadow:inset 3px 0 0 var(--accent);}
+    .prow.on .p-name{color:var(--accent);font-weight:700;}
     .p-flag{font-size:1.15rem;}
     .p-name{flex:1;font-size:var(--fs-sec);}
     .p-own{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
@@ -342,22 +543,63 @@
     #pickerCount{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
       padding:10px 2px 0;letter-spacing:0.08em;text-transform:uppercase;}
 
-    /* counter mode */
-    #bigDlg{max-width:none;width:100vw;height:100vh;max-height:100vh;border:0;border-radius:0;}
-    #bigDlg .dlg-body{max-height:none;height:calc(100vh - 62px);padding:24px;
-      display:flex;flex-direction:column;justify-content:center;}
+    /* ---------- counter mode ---------- */
+    /* The box app.js fits the identifier into. What it guarantees: the body is
+       exactly the viewport minus the header, its content box is the full width
+       the identifier may use, content taller than the box overflows DOWNWARD
+       into a body that scrolls, and no identifier is ever cut off at any width
+       or zoom — what does not fit is scrolled to or wrapped to, never clipped;
+       see .f-v--fit below. Auto margins centre the card while it fits
+       and collapse to zero the moment free space goes negative — a centred flex
+       item spills off both ends, and a scroll container cannot reach a negative
+       scrollTop, so on a phone turned sideways the number would sit above the
+       top of the screen with nothing able to scroll back to it. */
+    #bigDlg{max-width:none;width:100vw;height:100vh;height:100dvh;
+      max-height:100dvh;border:0;border-radius:0;}
+    #bigDlg .dlg-head{padding:14px 24px;}
+    #bigDlg .dlg-body{max-height:none;padding:20px 24px;
+      display:flex;flex-direction:column;justify-content:flex-start;}
     /* min-width:0 throughout: a flex item defaults to min-width:auto and so
        refuses to shrink below its content, which would let a long identifier
        push the card wider than the screen instead of being scaled down. */
-    #bigFace{display:flex;flex-direction:column;gap:26px;width:100%;min-width:0;}
+    #bigFace{display:flex;flex-direction:column;gap:clamp(10px,3.2vh,26px);
+      width:100%;min-width:0;margin:auto 0;}
+    /* The whole card may legitimately be taller than the box — a régimen label
+       and an invoicing note are not what is being held across a counter — so the
+       box does not promise to contain it. It promises that the LEAD ROW is the
+       first thing in the flow, that nothing can push it down or squash it, and
+       that shrinking the identifier shrinks that row. That is a guard fitLead()
+       can satisfy; "the whole card fits" is not, and chasing it drives the
+       identifier to its floor for no gain. */
+    #bigFace>*{flex:none;}
     #bigFace .f,#bigFace .f-v{min-width:0;}
     #bigFace .f-v{font-size:clamp(2.2rem,11vw,4.4rem);letter-spacing:0.08em;}
-    /* size is measured and set by fitLead() in js/app.js */
-    #bigFace .f-v--fit{white-space:nowrap;word-break:normal;overflow:hidden;}
+    /* The font size is measured and set by fitLead() in js/app.js, which shrinks
+       the identifier until one line of it fits. Two declarations hold that up.
+       nowrap is the load-bearing one: the fit measures the value with a Range,
+       and a Range over wrapped text returns the union of its line boxes — the
+       width of the container — so with wrapping allowed the arithmetic always
+       concludes that the number already fits and every identifier renders at
+       the starting size, wrapped, however much room it had.
+       overflow:visible is the other. nowrap must never come to mean a cut-off
+       number: what does not fit spills into a body that scrolls, not into a
+       clip. Clipping costs nothing a reader can see and hands the first twenty
+       characters of a tax number to someone reading it out at a counter, which
+       is the one failure this view exists to prevent, so nothing here or in
+       app.js may set overflow:hidden or text-overflow on this element.
+       .f-v--wrap is the escape for the case the fit cannot solve — a value too
+       long for one line even at the floor size. app.js adds it after measuring;
+       the value then breaks at any character (.f-v carries overflow-wrap:
+       anywhere and .f--lead .f-v word-break:break-all) and the card grows
+       downward instead of sideways, which is the better of the two. */
+    #bigFace .f-v--fit{overflow:visible;white-space:nowrap;}
+    #bigFace .f-v--fit.f-v--wrap{white-space:normal;}
     #bigFace .f-v--sm{font-size:clamp(1.1rem,4.5vw,1.7rem);}
     #bigFace .f-phon{font-size:clamp(0.85rem,3vw,1.05rem);}
-    #bigFace .f-k{font-size:var(--fs-label);}
-    .big-head{display:flex;flex-direction:column;gap:2px;flex:1;}
+    /* The field name says WHICH number this is. In the read-aloud view that is
+       not a caption, it is half the message. */
+    #bigFace .f-k{font-size:var(--fs-sm);color:var(--text-sec);}
+    .big-head{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
     .big-country{font-family:var(--display);font-weight:900;font-size:var(--fs-h3);
       text-transform:uppercase;letter-spacing:1px;}
     .big-label{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
@@ -366,36 +608,154 @@
     #qrDlg .dlg-body{display:flex;justify-content:center;background:#fff;}
     #qrImg{max-width:100%;height:auto;image-rendering:pixelated;}
 
-    @media(max-width:520px){
-      .wrap{padding:0 14px 80px;}
-      .f-v{font-size:1.6rem;}
-      .actions .btn{flex:1;justify-content:center;}
+    /* A phone in landscape, or a short desktop window, is the posture counter
+       mode exists for and the one with the least room. */
+    @media(max-height:520px){
+      #bigDlg .dlg-head{padding:8px 16px;}
+      #bigDlg .dlg-body{padding:12px 16px;}
+      #bigFace{gap:8px;}
+      #bigFace .f-phon{font-size:0.8rem;}
+      /* With this little height the number, its name and its phonetics are the
+         entire message. The invoicing status and the profile caveat are read off
+         the card detail; here they only push the number towards the fold. The
+         staleness line stays, and so does the caveat on a green badge: both are
+         warnings about the number being read out, which is the only thing this
+         posture is for. */
+      #bigFace .f-einv,#bigFace .f-note:not(.f-weak){display:none;}
     }
+
+    @media(max-width:520px){
+      :root{--gutter:14px;}
+      .wrap{padding:0 var(--gutter) 80px;}
+      .f-v{font-size:1.6rem;}
+      .updatebar{left:8px;right:8px;bottom:8px;}
+    }
+    /* A phone at 320px, or 400% zoom of a laptop. The action buttons keep their
+       nowrap labels and give back horizontal padding instead, so the row wraps
+       between buttons rather than inside one. */
+    @media(max-width:400px),(max-height:430px){
+      dialog{width:calc(100% - 12px);}
+      .dlg-head,.dlg-foot{padding:10px 12px;}
+      .dlg-body{--dlg-pad:12px;}
+      .detail-acts .btn{min-width:96px;padding:0 10px;}
+    }
+    /* 400% zoom of a laptop screen is 320x256. Left alone, a wrapping card name
+       and four action buttons take all of it and leave the card a sliver, so the
+       name ellipsises instead of wrapping and the chrome gives back its padding.
+       The actions are what the dialog is for; the fields underneath scroll. */
+    @media(max-height:430px){
+      .dh-label{white-space:nowrap;}
+      .dlg-head,.dlg-foot{padding:8px 12px;}
+      .detail-acts{gap:6px;}
+      .detail-acts .btn{height:32px;}
+      #cardDlg .dlg-body{max-height:none;}
+    }
+    /* A 900px column marooned in the middle of a 1920px screen reads as an
+       accident; 20px gutters on a tablet read as cramped. */
+    @media(min-width:640px){:root{--gutter:32px;}}
+    @media(min-width:1200px){.wrap{max-width:1180px;}}
 
     @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
 
-    /* ---------- print: a wallet card, nothing else ---------- */
+    /* ---------- print: one wallet card, built for paper ---------- */
+    /* #printSheet is filled by app.js from the open card and is then the only
+       thing on the page. Sending the live DOM to a printer instead gives the
+       whole card wall — every card on the device, in near-white on white — and
+       never the one card the button was pressed on.
+       The takeover is conditional on the sheet actually holding an identifier,
+       because the alternative failure is worse than the one being fixed: an
+       unconditional takeover turns a plain Ctrl+P into one empty bordered box.
+       So the default is the page itself, restyled for paper, and the sheet wins
+       only once there is a card in it. A browser with no :has() never evaluates
+       the second half and keeps the page, which is the safe way to be wrong. */
+    #printSheet{display:none;}
     @media print{
-      body{background:#fff;color:#000;}
-      #carinoNav,.mast,.manage,.actions,.kindtabs,.j-change,.f-copy,dialog,.alert{display:none!important;}
-      .wrap{padding:0;max-width:none;}
-      .jbar{border-bottom:2px solid #000;}
-      .j-name{color:#000;}
-      .face{border:1px solid #000;background:#fff;color:#000;border-radius:0;}
-      .f-k,.f-badge,.f-note{color:#333;}
-      .f-phon{color:#000;border-left:2px solid #000;}
-      .pill{border-color:#000;color:#000;background:none;}
+      :root{color-scheme:light;}
+      @page{margin:14mm;}
+      body{background:#fff;color:#000;margin:0;}
+      /* A dialog is a thing to answer, not a thing to file, and a button is a
+         thing to press. None of them belongs on paper, and neither does the
+         fleet header, which prints as a black bar across the top of the page. */
+      dialog,.updatebar,.skip,.btn,#carinoNav{display:none!important;}
+      dialog::backdrop{display:none!important;}
+      /* The whole palette is one hop away from paper: swap the tokens on the
+         landmark and every rule underneath resolves to ink. */
+      #main{--text:#000;--text-sec:#2b2b2b;--text-muted:#444;--border:#999;
+        --border-ui:#666;--accent:#000;--accent-dim:#999;--accent-faint:transparent;
+        --accent-glow:transparent;--bg:#fff;--bg-card:#fff;--bg-elev:#fff;
+        --ochre-warn:#000;--kind-business:#000;--kind-personal:#666;--stage-grad:none;
+        /* Gold on white survives a colour printer and disappears on a mono one.
+           Every state on the wall is also spelled out in words, so ink loses
+           nothing here and gains the case the sheet was already written for. */
+        --ok:#000;--err:#000;--err-text:#000;--warn:#000;--info:#000;}
+      .tile{box-shadow:none;break-inside:avoid;}
+      body:has(#psLeadV:not(:empty)) #main{display:none!important;}
+      body:has(#psLeadV:not(:empty)) #printSheet{display:block!important;}
+      #printSheet{font-family:var(--mono);color:#000;background:#fff;}
+      .ps-card{max-width:112mm;border:1.5pt solid #000;border-radius:3mm;
+        padding:7mm 8mm 6mm;page-break-inside:avoid;}
+      .ps-head{display:flex;align-items:baseline;gap:5pt;border-bottom:0.75pt solid #000;
+        padding-bottom:4pt;margin-bottom:7pt;}
+      .ps-flag{font-size:14pt;line-height:1;}
+      .ps-country{font-family:var(--display);font-weight:800;font-size:13pt;
+        text-transform:uppercase;letter-spacing:0.6pt;flex:1;}
+      .ps-tier{font-size:7.5pt;text-transform:uppercase;letter-spacing:0.8pt;
+        border:0.75pt solid #000;border-radius:999px;padding:1pt 5pt;white-space:nowrap;}
+      .ps-label{font-family:var(--display);font-weight:700;font-size:12pt;line-height:1.25;}
+      .ps-auth{font-size:8pt;color:#333;margin-top:1pt;}
+      .ps-lead{margin:8pt 0 4pt;}
+      /* The number is the artefact. Everything above it is context and
+         everything below it is qualification. */
+      .ps-lead .ps-k{font-size:8pt;letter-spacing:1.4pt;text-transform:uppercase;color:#333;}
+      .ps-v{font-size:21pt;font-weight:700;letter-spacing:1.2pt;line-height:1.2;
+        overflow-wrap:anywhere;font-variant-numeric:tabular-nums;margin-top:1pt;}
+      /* Valid, unchecked and refused are three different words with three
+         different marks, and none of them depends on a colour surviving a
+         black-and-white printer. Paper has no colour and no hover, so the three
+         also differ in shape and weight, and they escalate in that order: no
+         box at all, a light dashed box, a heavy solid box in bold. A failed
+         check digit and a refused number share the heavy box because neither
+         may ever read softer than the other; "not checked" must never be
+         mistaken for either. The distinctions are all borders and weights
+         rather than fills — a printer with background graphics off drops a fill
+         and would leave reversed text invisible. */
+      .ps-state{font-size:8pt;text-transform:uppercase;letter-spacing:0.9pt;margin-top:3pt;}
+      .ps-state.ok::before{content:"✓ ";}
+      .ps-state.err::before{content:"✕ ";}
+      .ps-state.warn::before{content:"! ";font-weight:700;}
+      .ps-state.warn{border:0.5pt dashed #000;padding:1pt 4pt;display:inline-block;}
+      .ps-state.err{border:1.5pt solid #000;padding:1.5pt 5pt;display:inline-block;
+        font-weight:700;letter-spacing:1.3pt;}
+      .ps-phon{font-size:9pt;line-height:1.5;margin-top:5pt;padding-left:5pt;
+        border-left:1.5pt solid #000;}
+      .ps-rows{margin-top:8pt;border-top:0.75pt solid #000;}
+      .ps-row{display:flex;gap:8pt;padding:3.5pt 0;border-bottom:0.5pt solid #999;
+        page-break-inside:avoid;}
+      .ps-rk{width:30%;flex:none;font-size:8pt;text-transform:uppercase;
+        letter-spacing:0.9pt;color:#333;}
+      .ps-rv{flex:1;font-size:10.5pt;overflow-wrap:anywhere;}
+      .ps-foot{margin-top:7pt;display:flex;flex-wrap:wrap;gap:2pt 10pt;
+        font-size:7.5pt;color:#333;line-height:1.5;}
+      .ps-src{margin-left:auto;}
+      /* Last, so it outranks the boxed states above it: a part with nothing in
+         it prints nothing at all. An empty tier is a stray rounded outline, an
+         empty rows block a rule across the card, an empty phonetic line a rule
+         down the side of nothing, and an empty state a box around no verdict. */
+      .ps-tier:empty,.ps-auth:empty,.ps-label:empty,.ps-state:empty,
+      .ps-phon:empty,.ps-rows:empty,.ps-note:empty,.ps-src:empty{display:none;}
     }
   </style>
 </head>
 <body>
 
-<main class="wrap">
+<a class="skip" id="skipLink" href="#main" data-i18n>Skip to your cards</a>
+
+<main class="wrap" id="main" tabindex="-1">
 
   <header class="mast">
-    <p class="lede" data-i18n>Your tax numbers for every country, ready to read out at the counter.</p>
+    <p class="kicker" data-i18n>Works offline. Nothing leaves this device.</p>
+    <h1 class="lede" data-i18n>Your tax numbers for every country, ready to read out at the counter.</h1>
     <p class="sub">
-      <span data-i18n>Works offline. Nothing leaves this device.</span>
       <a href="#demo" id="demoLink" data-i18n>See it with sample cards</a>
     </p>
   </header>
@@ -410,26 +770,42 @@
     <span data-i18n>A card from a shared link. It is only being shown — nothing has been saved to this device.</span>
     <button class="btn" id="sharedAdd" data-i18n>Keep this card</button>
   </div>
+  <!-- Deliberately the red treatment, not the amber of the banner above it: a
+       link this app cannot check must not be one more yellow box beside a link
+       it can. -->
+  <div class="alert err" id="sharedUnverified" hidden data-i18n>This link is from an older version and carries no integrity check. Read every number back against your own document before you use it.</div>
 
   <section class="wall">
     <div class="panel-header">
       <div>
-        <div class="panel-title" data-i18n>Your cards</div>
+        <h2 class="panel-title" data-i18n>Your cards</h2>
         <div class="panel-desc" id="cardCount"></div>
       </div>
       <button class="btn btn-primary" id="addCard" data-i18n>Add card</button>
+    </div>
+    <div class="empty" id="emptyIntro" hidden>
+      <p class="empty-t" data-i18n>No card yet</p>
+      <p class="empty-d" data-i18n>Add one and it stays on this device — nothing is ever sent anywhere.</p>
     </div>
     <div class="grid" id="cardGrid"></div>
   </section>
 
   <section class="manage">
     <div class="privacy">
-      <div class="row"><span data-i18n>This page makes no network requests once it has loaded. No analytics, no sync, no account, no error reporting — nothing to opt out of, because nothing is sent.</span></div>
+      <!-- The old wording claimed no network requests at all after load, which a
+           reader disproves in one devtools screenshot: the registry record for a
+           country is fetched when that card is opened. On the one panel whose
+           job is precision, a claim that is nearly true is worse than the exact
+           one, which is strong enough on its own. -->
+      <div class="row"><span data-i18n>No analytics, no sync, no account, no error reporting. The only things this page asks the network for are its own files from this domain, and not one request carries anything you typed.</span></div>
       <div class="row"><span data-i18n>Cards live in this browser, on this device only. Clearing site data deletes them, and no other device or browser can see them.</span></div>
       <div class="row"><span data-i18n>Some numbers are refused outright. A US Social Security Number and a Japanese My Number are never stored — the card editor explains why and what to use instead.</span></div>
-      <div class="row"><span><b data-i18n>Coverage:</b> <span data-i18n>every ISO 3166 jurisdiction is present —</span> <span id="jurisdictionTotal">249</span> <span data-i18n>in all. Three are verified against their authority, eighteen carry published structure, and the rest store and present without validating. Each card says which.</span></span></div>
+      <div class="row"><span><b data-i18n>Coverage:</b> <span data-i18n>every ISO 3166 jurisdiction is present —</span> <span id="jurisdictionTotal">249</span> <span data-i18n>in all. {t1} are verified against their authority, {t2} carry published structure, and the rest store and present without validating. Each card says which.</span></span></div>
+      <div class="row" id="offlineRow"><span id="offlineState" role="status"></span></div>
       <div class="tools">
         <button class="btn btn-ghost" id="exportBtn" data-i18n>Copy a backup</button>
+        <button class="btn btn-ghost" id="restoreBtn" data-i18n>Restore from a backup</button>
+        <button class="btn btn-ghost btn-danger" id="eraseBtn" data-i18n>Erase everything</button>
       </div>
     </div>
   </section>
@@ -437,25 +813,45 @@
 </main>
 
 <!-- jurisdiction picker -->
-<dialog id="pickerDlg">
+<dialog id="pickerDlg" aria-labelledby="pickerTitle">
   <div class="dlg-head">
-    <span class="dlg-title" data-i18n>Jurisdiction</span>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <h2 class="dlg-title" id="pickerTitle" data-i18n>Jurisdiction</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
   <div class="dlg-body">
-    <input class="input" id="pickerSearch" type="search" placeholder="Search 249 jurisdictions" data-i18n-ph>
-    <div id="pickerCount"></div>
+    <div id="pickerTop">
+      <input class="input" id="pickerSearch" type="search" placeholder="Search {n} jurisdictions" data-i18n-ph
+             aria-label="Search {n} jurisdictions" data-i18n-attr="aria-label">
+      <div id="pickerCount" role="status" aria-atomic="true"></div>
+    </div>
     <div id="pickerList"></div>
   </div>
 </dialog>
 
 <!-- card editor -->
-<dialog id="editDlg">
+<dialog id="editDlg" aria-labelledby="editTitle">
   <div class="dlg-head">
-    <span class="dlg-title" id="editTitle"></span>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <h2 class="dlg-title" id="editTitle"></h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
-  <div class="dlg-body"><div id="editForm"></div></div>
+  <div class="dlg-body">
+    <div class="review" id="reviewPane" hidden>
+      <h3 class="rv-t" data-i18n>Check what was read</h3>
+      <p class="rv-d" data-i18n>Nothing is filled in until you confirm.</p>
+      <div class="rv-problem" id="reviewProblem" hidden></div>
+      <div id="reviewList"></div>
+      <div class="rv-notes" id="reviewNotes"></div>
+      <div class="rv-missing" id="reviewMissing" hidden>
+        <span class="rv-k" data-i18n>Not found in the document</span>
+        <span id="reviewMissingList"></span>
+      </div>
+      <div class="rv-acts">
+        <button class="btn btn-primary" id="reviewApply" data-i18n>Use the ticked fields</button>
+        <button class="btn" id="reviewCancel" data-i18n>Cancel</button>
+      </div>
+    </div>
+    <div id="editForm"></div>
+  </div>
   <div class="dlg-foot">
     <button class="btn btn-ghost left" id="editDelete" data-i18n>Delete</button>
     <button class="btn" data-close data-i18n>Cancel</button>
@@ -464,26 +860,26 @@
 </dialog>
 
 <!-- counter mode -->
-<dialog id="bigDlg">
+<dialog id="bigDlg" aria-labelledby="bigCountry bigLabel">
   <div class="dlg-head">
     <div class="big-head">
-      <span class="big-country" id="bigCountry"></span>
+      <h2 class="big-country" id="bigCountry"></h2>
       <span class="big-label" id="bigLabel"></span>
     </div>
     <button class="btn" id="bigSpeak" hidden data-i18n>Speak it</button>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
   <div class="dlg-body"><div id="bigFace"></div></div>
 </dialog>
 
 <!-- card detail -->
-<dialog id="cardDlg">
+<dialog id="cardDlg" aria-labelledby="detailCountry detailLabel">
   <div class="dlg-head">
     <div class="dh">
       <span class="dh-country" id="detailCountry"></span>
-      <span class="dh-label" id="detailLabel"></span>
+      <h2 class="dh-label" id="detailLabel"></h2>
     </div>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
   <div class="dlg-body">
     <div class="detail-meta" id="detailMeta"></div>
@@ -498,22 +894,27 @@
 </dialog>
 
 <!-- share -->
-<dialog id="shareDlg">
+<dialog id="shareDlg" aria-labelledby="shareTitle">
   <div class="dlg-head">
-    <span class="dlg-title" data-i18n>Share this card</span>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <h2 class="dlg-title" id="shareTitle" data-i18n>Share this card</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
   <div class="dlg-body">
-    <div class="shr-tabs" id="shareTabs">
-      <button class="shr-tab on" data-payload="vcard" data-i18n>vCard</button>
-      <button class="shr-tab" data-payload="link" data-i18n>Link</button>
-      <button class="shr-tab" data-payload="carino" data-i18n>Carino payload</button>
+    <div class="shr-tabs" id="shareTabs" role="radiogroup" aria-labelledby="shareTitle">
+      <input class="shr-r" type="radio" name="sharePayload" id="shrVcard" value="vcard" checked>
+      <label class="shr-tab" for="shrVcard" data-i18n>vCard</label>
+      <input class="shr-r" type="radio" name="sharePayload" id="shrLink" value="link">
+      <label class="shr-tab" for="shrLink" data-i18n>Link</label>
+      <input class="shr-r" type="radio" name="sharePayload" id="shrCarino" value="carino">
+      <label class="shr-tab" for="shrCarino" data-i18n>Carino payload</label>
     </div>
     <div id="shareQr"></div>
-    <div id="shareWhat"></div>
+    <div id="shareWhat" aria-live="polite"></div>
     <div class="shr-acts">
       <button class="btn btn-primary" id="shareImage" data-i18n>Save as image</button>
       <button class="btn" id="shareLink" data-i18n>Copy link</button>
+      <button class="btn" id="shareVcf" data-i18n>Save .vcf</button>
+      <button class="btn" id="shareVcard" data-i18n>Copy vCard</button>
       <button class="btn" id="shareQuote" data-i18n>Send to Quote</button>
     </div>
     <div class="shr-warn" data-i18n>The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.</div>
@@ -521,13 +922,92 @@
 </dialog>
 
 <!-- official QR -->
-<dialog id="qrDlg">
+<dialog id="qrDlg" aria-labelledby="qrTitle">
   <div class="dlg-head">
-    <span class="dlg-title" data-i18n>Official QR</span>
-    <button class="dlg-x" data-close aria-label="Close">✕</button>
+    <h2 class="dlg-title" id="qrTitle" data-i18n>Official QR</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
   </div>
-  <div class="dlg-body"><img id="qrImg" alt=""></div>
+  <!-- The alt names what the picture IS, not what it encodes: the image was
+       uploaded by the holder and this app has never decoded it. -->
+  <div class="dlg-body"><img id="qrImg" alt="Official QR" data-i18n-attr="alt"></div>
 </dialog>
+
+<!-- restore from a backup -->
+<dialog id="restoreDlg" aria-labelledby="restoreTitle">
+  <div class="dlg-head">
+    <h2 class="dlg-title" id="restoreTitle" data-i18n>Restore from a backup</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <p class="ed-note" data-i18n>Choose a backup file, or paste one below.</p>
+    <div class="ed-row">
+      <input class="input" type="file" id="restoreFile" accept="application/json,.json"
+             aria-labelledby="restoreTitle">
+    </div>
+    <div class="ed-row">
+      <textarea class="textarea" id="restoreText" aria-labelledby="restoreTitle"></textarea>
+    </div>
+    <label class="ed-check">
+      <input type="checkbox" id="restoreReplace">
+      <span data-i18n>Replace everything on this device</span>
+    </label>
+    <div class="ed-hint" id="restoreResult" role="status" aria-atomic="true"></div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn" data-close data-i18n>Cancel</button>
+    <button class="btn btn-primary" id="restoreRun" data-i18n>Restore from a backup</button>
+  </div>
+</dialog>
+
+<!-- erase everything on this device -->
+<dialog id="eraseDlg" role="alertdialog" aria-labelledby="eraseTitle" aria-describedby="eraseWhat">
+  <div class="dlg-head">
+    <h2 class="dlg-title" id="eraseTitle" data-i18n>Erase everything</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <p class="refused-d" id="eraseWhat" data-i18n>This deletes every card in this browser. It cannot be undone, and there is no copy anywhere else.</p>
+    <div class="ed-hint" id="eraseResult" role="status" aria-atomic="true"></div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn" data-close data-i18n>Cancel</button>
+    <button class="btn btn-danger" id="eraseRun" data-i18n>Erase everything</button>
+  </div>
+</dialog>
+
+<!-- a new build is installed and waiting -->
+<div class="updatebar" id="updateBar" hidden role="status">
+  <span data-i18n>A new version is ready.</span>
+  <button class="btn btn-primary" id="updateReload" data-i18n>Reload</button>
+  <button class="btn btn-ghost ub-x" id="updateDismiss" data-i18n-attr="aria-label" aria-label="Close">✕</button>
+  <span class="ub-warn" data-i18n>Reloading will discard anything you are typing.</span>
+</div>
+
+<!-- The printed card. app.js fills it from the open card; a printer sees only
+     this once #psLeadV holds an identifier, and sees the page itself while it
+     does not. Every part left empty prints nothing. -->
+<div id="printSheet" aria-hidden="true">
+  <div class="ps-card">
+    <div class="ps-head">
+      <span class="ps-flag" id="psFlag"></span>
+      <span class="ps-country" id="psCountry"></span>
+      <span class="ps-tier" id="psTier"></span>
+    </div>
+    <div class="ps-label" id="psLabel"></div>
+    <div class="ps-auth" id="psAuth"></div>
+    <div class="ps-lead">
+      <div class="ps-k" id="psLeadK"></div>
+      <div class="ps-v" id="psLeadV"></div>
+      <div class="ps-state" id="psState"></div>
+      <div class="ps-phon" id="psPhon"></div>
+    </div>
+    <div class="ps-rows" id="psRows"></div>
+    <div class="ps-foot">
+      <span class="ps-note" id="psNote"></span>
+      <span class="ps-src" id="psSrc"></span>
+    </div>
+  </div>
+</div>
 
 <script src="carino-navbar.js" data-app="Fiscal" data-repo="Fiscal" defer></script>
 <script src="carino-lang.js" defer></script>
@@ -541,11 +1021,28 @@
 <script src="i18n.js" defer></script>
 <script src="js/app.js" defer></script>
 <script>
+  // carino-navbar.js injects the shared header as document.body's first child,
+  // which pushes the skip link to second in the DOM and leaves it skipping
+  // nothing — six header stops still come first. Every deferred script has run
+  // by DOMContentLoaded, so the header exists here, and nothing can have been
+  // tabbed yet. It lives beside the registration rather than in js/app.js
+  // because it is about the order of this document, not about the app.
+  document.addEventListener('DOMContentLoaded', function () {
+    var skip = document.getElementById('skipLink');
+    if (skip && skip !== document.body.firstElementChild) {
+      document.body.insertBefore(skip, document.body.firstChild);
+    }
+  });
+
   // Offline is the whole premise, so the service worker is not an enhancement.
   // Registration is guarded: opened from file:// it simply does not run.
+  // The CSP in <head> carries a sha256 of this exact block — edit it and the
+  // hash must be recomputed, or nothing here runs.
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () { /* offline cache is best-effort */ });
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        if (window.FiscalApp && window.FiscalApp.onServiceWorker) window.FiscalApp.onServiceWorker(reg);
+      }).catch(function () { /* offline cache is best-effort */ });
     });
   }
 </script>

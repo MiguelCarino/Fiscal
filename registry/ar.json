@@ -1,10 +1,11 @@
 {
   "iso": "AR",
   "tier": 2,
-  "authority": "AFIP — Administración Federal de Ingresos Públicos",
+  "authority": "ARCA — Agencia de Recaudación y Control Aduanero (ex AFIP)",
   "verified": {
     "on": "2026-09-02",
-    "src": "https://www.afip.gob.ar/"
+    "src": "https://www.arca.gob.ar/inscripcion/",
+    "note": "AFIP was dissolved by Decreto 953/2024 and its functions passed to ARCA; afip.gob.ar now serves the ARCA portal. The CUIT itself, its check digit and the invoice classes are unchanged, so the old name is kept in parentheses — every pre-2025 document and every counter still says AFIP."
   },
   "identifiers": [
     {
@@ -13,6 +14,7 @@
         "en": "CUIT / CUIL"
       },
       "format": "^[0-9]{11}$",
+      "scope": "both",
       "checksum": {
         "engine": "mod11-weighted",
         "weights": [
@@ -29,6 +31,9 @@
         ],
         "map": "sub11"
       },
+      "denied": [
+        "00000000000"
+      ],
       "display": "##-########-#"
     }
   ],
@@ -63,11 +68,11 @@
   ],
   "einvoicing": {
     "status": "mandatory",
-    "scheme": "Factura electrónica AFIP",
+    "scheme": "Factura electrónica",
     "note": {
-      "en": "CUIT determines the invoice class you receive."
+      "en": "CUIT determines the invoice class you receive. The régimen is not branded after the agency, which is what let the old name rot into this record."
     },
     "verified": "2026-09-02",
-    "src": "https://www.afip.gob.ar/"
+    "src": "https://www.arca.gob.ar/facturacion/"
   }
 }
