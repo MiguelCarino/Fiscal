@@ -27,6 +27,7 @@
     const KEY_CARDS = 'carino.fiscal.cards';
     const KEY_LAST = 'carino.fiscal.last';         // { iso, kindByIso: { MX: 'business' } }
     const KEY_TRUST = 'carino-bridge.trusted';     // written by carino-bridge.js, erased with the rest
+    const KEY_BACKUP = 'carino.fiscal.backup';     // { on: 'YYYY-MM-DD', n: cards at the time }
     const IMAGE_CAP = 400 * 1024;                  // ~400 KB of data URL per card
 
     const APP = 'carino-fiscal';                   // envelope marker on a backup
@@ -390,6 +391,10 @@
         memory = null;
         const gone = drop(KEY_CARDS) && drop(KEY_LAST);
         drop(KEY_TRUST);
+        /* The backup marker goes with them. Left behind, an erased device would answer "backed up
+           last week, five cards" for a store that now holds none, and the first card typed after
+           an erase would inherit that reassurance. */
+        drop(KEY_BACKUP);
         return gone && !read(KEY_CARDS, null) && !read(KEY_LAST, null);
     }
 
@@ -432,6 +437,83 @@
 
        Storage ids are not in it. They mean nothing on another device, and every
        card gets a fresh one on the way in. */
+
+    /* ---------------- durability ----------------
+       EVERYTHING THIS APP IS WORTH LIVES IN localStorage, AND localStorage IS EVICTABLE. A browser
+       under disk pressure discards it from origins it considers disposable, and Safari drops
+       unpersisted storage from a site it has not seen in about a week — so the failure mode for a
+       card somebody typed once and relies on twice a year is that it is simply gone, with no
+       warning and nothing to restore from. navigator.storage.persist() is the one API that asks
+       the browser not to do that.
+
+       IT IS ASKED FOR AND NOT DEPENDED ON. The answer is the user agent's: Firefox prompts, Chrome
+       grants silently on an installed or engaged origin and refuses otherwise, and Safari has its
+       own rules. A false is not an error and must not be reported as one — it means the browser
+       kept the right to reclaim the space, which is exactly the state the backup nudge below
+       exists for. Nothing is retried on a refusal: asking again on every load would be a prompt
+       the user already answered.
+
+       This is deliberately NOT called at import time. persist() may prompt, and a permission
+       prompt that appears before the user has done anything is one they dismiss. app.js calls it
+       after the first card is saved, which is the first moment there is anything to lose. */
+    function persistence() {
+        try {
+            if (!navigator.storage || !navigator.storage.persisted) {
+                return Promise.resolve({ supported: false, persisted: false });
+            }
+            return navigator.storage.persisted()
+                .then((p) => ({ supported: true, persisted: !!p }))
+                .catch(() => ({ supported: false, persisted: false }));
+        } catch (e) {
+            return Promise.resolve({ supported: false, persisted: false });
+        }
+    }
+
+    function requestPersistence() {
+        try {
+            if (!navigator.storage || !navigator.storage.persist) {
+                return Promise.resolve({ supported: false, persisted: false });
+            }
+            return navigator.storage.persisted().then((already) => {
+                if (already) return { supported: true, persisted: true };
+                return navigator.storage.persist()
+                    .then((ok) => ({ supported: true, persisted: !!ok }))
+                    .catch(() => ({ supported: true, persisted: false }));
+            }).catch(() => ({ supported: false, persisted: false }));
+        } catch (e) {
+            return Promise.resolve({ supported: false, persisted: false });
+        }
+    }
+
+    /* WHEN THE LAST BACKUP WAS TAKEN, and how many cards it held. Both, because either alone
+       lies: a backup from last week that holds two cards is stale for a device now holding five,
+       and a backup holding all five is not old merely because the calendar moved. The date is the
+       day, not the instant — this is read to say "a while ago", never to sort. */
+    function noteBackup(count) {
+        write(KEY_BACKUP, { on: new Date().toISOString().slice(0, 10), n: count | 0 });
+    }
+
+    function lastBackup() {
+        const v = read(KEY_BACKUP, null);
+        if (!v || typeof v !== 'object' || !/^\d{4}-\d{2}-\d{2}$/.test(String(v.on))) return null;
+        return { on: String(v.on), n: v.n | 0 };
+    }
+
+    /* The nudge's whole logic, kept here so the UI does not invent a policy of its own.
+       'none'  nothing has ever been exported and there is something to lose
+       'stale' the last backup predates the newest card, or is over 90 days old
+       null    there is nothing to say */
+    function backupState() {
+        const cards = all();
+        if (!cards.length) return null;
+        const last = lastBackup();
+        if (!last) return { state: 'none', cards: cards.length, on: null };
+        if (last.n < cards.length) return { state: 'stale', cards: cards.length, on: last.on };
+        const age = (Date.parse(new Date().toISOString().slice(0, 10)) - Date.parse(last.on))
+            / 86400000;
+        if (age >= 90) return { state: 'stale', cards: cards.length, on: last.on };
+        return null;
+    }
 
     function exportAll() {
         const cards = all().map((c) => {
@@ -512,6 +594,11 @@
 
     window.FiscalStore = {
         all: all,
+        persistence: persistence,
+        requestPersistence: requestPersistence,
+        noteBackup: noteBackup,
+        lastBackup: lastBackup,
+        backupState: backupState,
         forIso: forIso,
         byId: byId,
         save: save,

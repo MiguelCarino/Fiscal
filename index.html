@@ -488,6 +488,30 @@
     .input:focus,.select:focus,.textarea:focus{border-color:var(--accent);
       box-shadow:0 0 0 3px var(--accent-faint);}
     .textarea{resize:vertical;min-height:70px;}
+
+    /* ---------- check a number ----------
+       The input is echoed back beside its verdict because the commonest use is a column pasted
+       out of a spreadsheet: without the number on the row, four verdicts in a stack say nothing
+       about which line each belongs to. It is `break-all` for the same reason the card face is —
+       an identifier has no word breaks and must never widen the dialog. */
+    .chk-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;
+      padding:8px 0;border-bottom:1px solid var(--border);}
+    .chk-row:last-child{border-bottom:0;}
+    .chk-in{font-family:var(--mono);font-size:var(--fs-mono);color:var(--text);
+      word-break:break-all;}
+    .chk-hits{display:flex;flex-direction:column;gap:4px;margin-left:auto;align-items:flex-end;}
+    .chk-hit{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;justify-content:flex-end;}
+    .chk-where{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-sec);
+      text-transform:uppercase;letter-spacing:0.08em;}
+    .chk-none{font-size:var(--fs-sm);color:var(--text-sec);margin-left:auto;text-align:right;}
+    /* On a phone the two halves stop being a row: the number goes on top and its verdicts sit
+       under it, left-aligned, because right-aligning against a 320px edge puts the badge where
+       the thumb already is. */
+    @media(max-width:520px){
+      .chk-hits,.chk-none{margin-left:0;align-items:flex-start;text-align:left;}
+      .chk-hit{justify-content:flex-start;}
+      .chk-row{flex-direction:column;gap:4px;}
+    }
     /* SIXTEEN PIXELS ON A TOUCH DEVICE, AND IT IS NOT A TYPE DECISION. Mobile Safari zooms the
        whole page in whenever a field it is focusing has a font under 16px, and then leaves the
        user pinching back out — on a form whose entire job is typing a tax number at a counter,
@@ -834,7 +858,12 @@
       <div class="row"><span data-i18n>Some numbers are refused outright. A US Social Security Number and a Japanese My Number are never stored — the card editor explains why and what to use instead.</span></div>
       <div class="row"><span><b data-i18n>Coverage:</b> <span data-i18n>every ISO 3166 jurisdiction is present —</span> <span id="jurisdictionTotal">249</span> <span data-i18n>in all. {t1} are verified against their authority, {t2} carry published structure, and the rest store and present without validating. Each card says which.</span></span></div>
       <div class="row" id="offlineRow"><span id="offlineState" role="status"></span></div>
+      <!-- Filled by app.js and hidden until there is something to say. Not data-i18n: its text is
+           two sentences chosen at runtime and carries a date, so it is written through TT() from
+           the script rather than swapped in place by applyStaticI18n. -->
+      <div class="row" id="backupRow"><span class="warn" id="backupNote" role="status" hidden></span></div>
       <div class="tools">
+        <button class="btn btn-ghost" id="checkBtn" data-i18n>Check a number</button>
         <button class="btn btn-ghost" id="exportBtn" data-i18n>Copy a backup</button>
         <button class="btn btn-ghost" id="restoreBtn" data-i18n>Restore from a backup</button>
         <button class="btn btn-ghost btn-danger" id="eraseBtn" data-i18n>Erase everything</button>
@@ -962,6 +991,29 @@
   <!-- The alt names what the picture IS, not what it encodes: the image was
        uploaded by the holder and this app has never decoded it. -->
   <div class="dlg-body"><img id="qrImg" alt="Official QR" data-i18n-attr="alt"></div>
+</dialog>
+
+<!-- check a number that is not yours ------------------------------------------------------
+     Deliberately not an editor: nothing typed here is stored, shared or added to the wall, and
+     the hint says so, because a box that takes a tax number in an app that keeps tax numbers
+     has to state which of the two it is doing. -->
+<dialog id="checkDlg" aria-labelledby="checkTitle">
+  <div class="dlg-head">
+    <h2 class="dlg-title" id="checkTitle" data-i18n>Check a number</h2>
+    <button class="dlg-x" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
+  </div>
+  <div class="dlg-body">
+    <p class="ed-note" data-i18n>Paste a number, or one per line. Nothing here is saved to this device.</p>
+    <div class="ed-row">
+      <textarea class="textarea" id="checkText" aria-labelledby="checkTitle" spellcheck="false"
+                autocapitalize="characters"></textarea>
+    </div>
+    <div id="checkOut" role="status" aria-atomic="false"></div>
+  </div>
+  <div class="dlg-foot">
+    <button class="btn" data-close data-i18n>Cancel</button>
+    <button class="btn btn-primary" id="checkRun" data-i18n>Check</button>
+  </div>
 </dialog>
 
 <!-- restore from a backup -->

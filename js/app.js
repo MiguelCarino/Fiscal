@@ -2572,6 +2572,81 @@
        #demo           the samples
        Everything is a fragment, so none of it reaches a server. */
 
+    /* ================= launched from outside the tab =================
+       Three doors the manifest opens, and all three are read from the query string and then
+       WIPED from it, for the same reason the card links are: an address that still says
+       ?text=<somebody's VAT number> is one that goes into history, into a bookmark and into the
+       next screenshot. The strip is a replaceState, so Back does not walk into it either.
+
+       SHARED TEXT GOES TO THE CHECK BOX AND NOWHERE ELSE. It is the one surface in this app that
+       stores nothing, which is the right default for content the user did not type here and may
+       not have read: a signature block shared in from a mail app can carry somebody else's
+       number, and routing it to the editor would be an app that quietly keeps what it was passed.
+       ?do=check and ?do=counter are the manifest shortcuts; ?do=restore is the file handler. */
+    async function routeFromLaunch() {
+        let q;
+        try { q = new URLSearchParams(location.search || ''); }
+        catch (e) { return false; }
+        const doing = q.get('do');
+        const shared = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n');
+        if (!doing && !shared) return false;
+
+        try { history.replaceState(null, '', location.pathname); }
+        catch (e) { /* the address bar is not what the app runs on */ }
+
+        if (shared || doing === 'check') {
+            $('#checkText').value = shared;
+            $('#checkOut').textContent = '';
+            $('#checkDlg').showModal();
+            if (shared) renderCheck();
+            return true;
+        }
+        if (doing === 'restore') {
+            $('#restoreFile').value = '';
+            $('#restoreText').value = '';
+            $('#restoreReplace').checked = false;
+            $('#restoreResult').textContent = '';
+            $('#restoreDlg').showModal();
+            return true;
+        }
+        if (doing === 'counter') {
+            // The last card used, which is what a shortcut from the home screen means by "my
+            // card". With none on the device there is nothing to open and the wall is the honest
+            // answer rather than an empty dialog.
+            // openBig() reads the module's current card rather than taking one, so the card has
+            // to be SELECTED first. openCard does exactly that and opens the detail behind it,
+            // which is also where closing counter mode should land.
+            const card = (Store.forIso(Store.lastIso()) || [])[0] || allCards()[0];
+            if (card) {
+                await openCard(card);
+                openBig(await record(card.iso));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /* A file handed to an installed copy arrives through launchQueue rather than through the
+       query string, so the handler above cannot see it. Read as text and dropped into the
+       restore box — never applied on arrival, because a backup that restores itself the moment
+       it is opened is one nobody agreed to. */
+    function acceptLaunchedFiles() {
+        if (!('launchQueue' in window) || !window.launchQueue) return;
+        try {
+            window.launchQueue.setConsumer(async (params) => {
+                if (!params || !params.files || !params.files.length) return;
+                try {
+                    const text = await (await params.files[0].getFile()).text();
+                    $('#restoreFile').value = '';
+                    $('#restoreText').value = text;
+                    $('#restoreReplace').checked = false;
+                    $('#restoreResult').textContent = '';
+                    $('#restoreDlg').showModal();
+                } catch (e) { /* an unreadable file is the file picker's problem, not a crash */ }
+            });
+        } catch (e) { /* not supported here */ }
+    }
+
     async function routeFromHash() {
         const m = /^#\/([a-z0-9-]+)$/i.exec(location.hash || '');
         if (!m) return false;
@@ -2598,8 +2673,187 @@
     // back to hidden once site data is allowed again. A single write that did
     // not land is a different fact and gets its own line, because
     // storageAvailable() still answers true when the quota is simply full.
+    /* ================= checking a number that is not yours =================
+       THE ENGINES WERE ALWAYS GENERAL AND ONLY EVER POINTED AT THE HOLDER. Twenty-two records,
+       thirty-odd identifiers and a fixture suite already answer "is this a real number" for any
+       jurisdiction in the registry; until now the only way to ask was to type it into a card and
+       keep it. A supplier's VAT number on an invoice is the commonest reason to want the answer
+       and the one case the app could not serve.
+
+       NOTHING TYPED HERE IS STORED. Not to localStorage, not to the wall, not to `last`. That is
+       the whole reason this is a separate dialog rather than a mode of the editor: the editor's
+       job is to keep what it is given, and this box's job is to forget it. The hint says so where
+       the user is looking rather than in a policy page.
+
+       The jurisdiction is not asked for. A number's shape is usually enough to place it, and
+       making somebody pick Peru from 249 rows before they can check a RUC is the friction the
+       feature exists to remove — so every identifier of every real record is tried and the
+       results are ranked. Where a shape is genuinely ambiguous the answer says so by showing
+       more than one row, which is the honest output rather than a guess. */
+
+    // Trailing-edge only: the answer to a half-typed number is noise, and the answer to the
+    // finished one is the same work done once. 160ms is under the gap between two keystrokes of
+    // ordinary typing and over the gap inside a paste.
+    function debounce(fn, ms) {
+        let t = 0;
+        return function () {
+            const self = this, args = arguments;
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(self, args), ms);
+        };
+    }
+
+    // Tier 3 records are synthetic and hold no identifier, so they can neither match nor rule
+    // anything out. Loaded once and cached by record() thereafter.
+    let realRecordsCache = null;
+    async function realRecords() {
+        if (realRecordsCache) return realRecordsCache;
+        const codes = INDEX.filter((c) => c.tier !== 3).map((c) => c.iso);
+        realRecordsCache = await Promise.all(codes.map((c) => record(c)));
+        return realRecordsCache;
+    }
+
+    // Ranked worst-to-best so a plain sort puts the most useful reading first. A bad-check is
+    // ABOVE bad-format on purpose: "the right shape for a Spanish NIF, wrong control character"
+    // is a far more useful sentence than silence, and it is the one a mistyped number produces.
+    const CHECK_RANK = {
+        ok: 6, reserved: 5, unchecked: 4, unimplemented: 4,
+        'not-issuable': 3, 'bad-check': 2, refused: 1,
+    };
+
+    function readingsFor(value, recs) {
+        const out = [];
+        recs.forEach((rec) => {
+            (rec.identifiers || []).forEach((def) => {
+                const r = Engines.validate(value, def, rec);
+                const status = r && r.status;
+                // bad-format is the answer for every jurisdiction the number is NOT from, which is
+                // most of them; keeping those would bury the one that matters under two hundred.
+                if (!status || status === 'empty' || status === 'bad-format') return;
+                out.push({ iso: rec.iso, rec: rec, def: def, result: r, rank: CHECK_RANK[status] || 0 });
+            });
+        });
+        out.sort((a, b) => b.rank - a.rank);
+        // Only the best tier of answer is shown. A number that validates cleanly in one place does
+        // not need the four jurisdictions where it merely has the right number of digits.
+        return out.length ? out.filter((r) => r.rank === out[0].rank) : out;
+    }
+
+    /* WHAT COUNTS AS "A NUMBER" ON A LINE OF PROSE. A column pasted from a spreadsheet is one
+       value per line and the line IS the value; text shared in from a mail app is a sentence with
+       a value somewhere in it, and share_target exists to receive exactly that. So the whole line
+       is tried first — it is the common case and the least surprising — and only if nothing reads
+       is the line broken into candidate tokens.
+       Six characters is the floor because the shortest identifier the registry holds is eight and
+       a separator or two can be written inside it; below that the tokens are words. Punctuation
+       that authorities actually print inside numbers (. - /) stays inside the token, which is why
+       12.345.678-5 survives the split as one candidate rather than three. */
+    function candidatesOn(line) {
+        const out = [line];
+        const seen = { [line]: 1 };
+        (line.match(/[0-9A-Za-z][0-9A-Za-z.\-\/]{4,}[0-9A-Za-z]/g) || []).forEach((t) => {
+            if (!seen[t]) { seen[t] = 1; out.push(t); }
+        });
+        /* AND THE GROUPED FORMS, because that is how the authorities themselves print them: an ABN
+           is published as 51 824 753 556 and a SIREN as 380 129 866. The token pass above stops at
+           the first space and would read those as "51". This second pass takes runs of digits and
+           the separators that appear INSIDE a number, then closes the gaps — the engines normalise
+           punctuation anyway, so what is handed on is the digits in order.
+           Bounded to runs that still look like one number: it starts and ends on a digit, so a
+           sentence's worth of prose cannot be swallowed into a single candidate. */
+        (line.match(/[0-9][0-9 .\-]{4,}[0-9]/g) || []).forEach((t) => {
+            const joined = t.replace(/\s+/g, '');
+            if (!seen[joined]) { seen[joined] = 1; out.push(joined); }
+        });
+        return out;
+    }
+
+    function renderCheck() {
+        const out = $('#checkOut');
+        out.textContent = '';
+        const lines = $('#checkText').value.split(/[\r\n]+/)
+            .map((l) => l.trim()).filter(Boolean).slice(0, 200);
+        if (!lines.length) return;
+
+        realRecords().then((recs) => {
+            const frag = document.createDocumentFragment();
+            lines.forEach((line) => {
+                const row = el('div', 'chk-row');
+                // The echo is the candidate that actually read, not the line it was found in:
+                // on a shared signature block the line is a sentence, and a verdict beside a
+                // sentence does not say which characters it is about.
+                let shown = line;
+                let readings = [];
+                const cands = candidatesOn(line);
+                for (let ci = 0; ci < cands.length; ci++) {
+                    readings = readingsFor(cands[ci], recs);
+                    if (readings.length) { shown = cands[ci]; break; }
+                }
+                row.append(el('span', 'chk-in', shown));
+                if (!readings.length) {
+                    row.append(el('span', 'chk-none',
+                        TT('No jurisdiction this app knows issues a number in that shape.')));
+                } else {
+                    const hits = el('span', 'chk-hits');
+                    readings.forEach((r) => {
+                        const b = badgeFor(r.result, r.def);
+                        const one = el('span', 'chk-hit');
+                        one.append(el('span', 'chk-where',
+                            countryName(r.iso) + ' · ' + label(r.def.label, r.def.key)));
+                        if (b) {
+                            const badge = el('span', 'f-badge ' + b.tone, b.text);
+                            if (b.title) badge.title = b.title;
+                            one.append(badge);
+                        }
+                        hits.append(one);
+                    });
+                    row.append(hits);
+                }
+                frag.append(row);
+            });
+            out.append(frag);
+        });
+    }
+
     function reflectStorage() {
         $('#storageWarn').hidden = Store.storageAvailable();
+    }
+
+    /* Asked once per page life, not once per save. requestPersistence() resolves rather than
+       rejects on every path, so there is no catch here to write: a browser that does not implement
+       it, a user who declined, and a grant all arrive as the same shape. Nothing is shown on a
+       refusal — the honest consequence of one is that the backup line matters more, and that line
+       is already on screen. */
+    let persistenceAsked = false;
+    function askPersistenceOnce() {
+        if (persistenceAsked) return;
+        persistenceAsked = true;
+        Store.requestPersistence().then(reflectBackup);
+    }
+
+    /* ONE LINE THAT SAYS WHETHER THIS DEVICE IS A SAFE PLACE TO KEEP THIS, and it is deliberately
+       not a badge that says "protected". Two facts decide it and neither is under this app's
+       control: whether the browser granted persistent storage, and how long ago the user last took
+       a backup. The wording leads with the action, because "export a backup" is the only thing the
+       reader can actually do about either. */
+    function reflectBackup() {
+        const line = $('#backupNote');
+        if (!line) return;
+        const b = Store.backupState();
+        if (!b) { line.hidden = true; line.textContent = ''; return; }
+        Store.persistence().then((p) => {
+            const parts = [];
+            if (b.state === 'none') parts.push(TT('No backup has been taken from this device yet.'));
+            else parts.push(TT('The last backup was {date} and this device has changed since.',
+                { date: dateText(b.on) }));
+            // Said only when it is true and only when it is bad news. A granted persist() is the
+            // quiet case and needs no sentence; a refused one is why the backup is the whole plan.
+            if (p.supported && !p.persisted) {
+                parts.push(TT('This browser has not promised to keep this data, so it can be cleared to make room.'));
+            }
+            line.textContent = parts.join(' ');
+            line.hidden = false;
+        });
     }
 
     // A write the store could not land, and a number it held back, both have to
@@ -2691,6 +2945,7 @@
             return;
         }
         reflectStorage();
+        reflectBackup();
 
         const parts = [];
         let tone = 'ok';
@@ -2861,6 +3116,12 @@
             // store consults but cannot fetch for itself.
             const result = Store.save(editing, rec);
             reflectStorage();
+            // THE FIRST MOMENT THERE IS ANYTHING TO LOSE is the right one to ask the browser to
+            // keep it. Asking at boot would put a permission prompt in front of somebody who has
+            // not yet decided the app is worth anything; asking after every save would re-ask a
+            // question already answered. persist() resolves false on a refusal, which is not an
+            // error and is not reported as one — it is the state the backup nudge is for.
+            askPersistenceOnce();
             // Only an iso that is not two letters reaches this, and the picker
             // cannot produce one — but the wall goes down if it ever does.
             if (!result.card) return;
@@ -2907,7 +3168,22 @@
             const text = Store.exportAll();
             copy(text, this);
             downloadBackup(text);
+            // Recorded here and not inside exportAll(), because what counts as a backup is a file
+            // that left the app, not a string that was built. Both happen on this click.
+            Store.noteBackup(allCards().length);
+            reflectBackup();
         });
+
+        $('#checkBtn').addEventListener('click', () => {
+            $('#checkText').value = '';
+            $('#checkOut').textContent = '';
+            $('#checkDlg').showModal();
+        });
+        $('#checkRun').addEventListener('click', guard(renderCheck));
+        // Re-run as they type rather than only on the button: the commonest use is one number
+        // pasted in, and making somebody reach for a second click to see the answer to a question
+        // the app can already answer is the friction this feature exists to remove.
+        $('#checkText').addEventListener('input', debounce(renderCheck, 160));
 
         $('#restoreBtn').addEventListener('click', () => {
             $('#restoreFile').value = '';
@@ -2956,6 +3232,7 @@
         });
 
         reflectStorage();
+        reflectBackup();
 
         // A card's address is a real address: pasting one into a tab that is
         // already open has to open that card. Only a user navigation reaches
@@ -3223,7 +3500,11 @@
             kind = DEMO[0].kind;
         }
         await render();
-        await routeFromHash();
+        // Hash first: a card address is the more specific claim on the tab, and a launch that also
+        // carries one should land on the card rather than on a dialog over it.
+        const routed = await routeFromHash();
+        if (!routed) await routeFromLaunch();
+        acceptLaunchedFiles();
     }
 
     // i18n re-render hook, same contract as the rest of the fleet.
