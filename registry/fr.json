@@ -13,14 +13,17 @@
       "label": {
         "en": "Numéro fiscal"
       },
-      "format": "^[0-9]{13}$",
+      "format": "^[0-3][0-9]{12}$",
       "scope": "personal",
       "checksum": {
         "engine": "mod511"
       },
       "denied": [
         "0000000000000"
-      ]
+      ],
+      "note": {
+        "en": "The leading digit is 0 to 3 because the cited DGFiP note says so — \"C1 doit être égal à 0, 1, 2 ou 3\" — and a thirteen-digit string beginning 4 to 9 is therefore malformed rather than merely failing its modulus. The same note's type table omits C7 from its list of numeric characters, which is a slip in the table and not a rule: step 1 of its own algorithm concatenates C1 to C10 into a number, which C7 could not join if it were a letter."
+      }
     },
     {
       "key": "siren",
@@ -56,7 +59,7 @@
         "FR00000000000"
       ],
       "note": {
-        "en": "Structure is checked. The two-character key is published as (12 + 3 × (SIREN mod 97)) mod 97, but numbers issued under the older scheme carry a key with letters in it that the same arithmetic does not produce, and a single rule cannot tell the two apart from the number alone. Confirm it against your own document."
+        "en": "Structure is checked. The two-character key is published as (12 + 3 × (SIREN mod 97)) mod 97, but numbers issued under the older scheme carry a key with letters in it that the same arithmetic does not produce, and a single rule cannot tell the two apart from the number alone. Confirm it against your own document. THE KEY IS LEFT ALPHANUMERIC ON PURPOSE, against the cited DGFiP page, which describes the number as \"2 lettres (FR) et 11 chiffres\". Keys containing a letter are issued and FRK7552032534 is one of them, sitting in the fixtures below; narrowing this to digits to agree with that sentence would reject real numbers, and rejecting a real number is the worst thing this app does. The page is incomplete, not the format."
       }
     }
   ],

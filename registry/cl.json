@@ -13,7 +13,7 @@
       "label": {
         "en": "RUT"
       },
-      "format": "^[0-9]{7,8}[0-9K]$",
+      "format": "^[0-9]{4,8}[0-9K]$",
       "scope": "both",
       "checksum": {
         "engine": "mod11-weighted",
@@ -27,6 +27,9 @@
         ],
         "map": "sub11-k",
         "bodyLengths": [
+          4,
+          5,
+          6,
           7,
           8
         ]
@@ -36,7 +39,7 @@
         "000000000"
       ],
       "note": {
-        "en": "The verification digit is the last character and the body is 7 or 8 digits, so written without the hyphen an eight-character value is a seven-digit body and its digit or an eight-digit body still missing one; write it 12.345.678-5 and the boundary is stated. Until it is stated the rule is not run and the badge says so, because one incomplete value in ten satisfies the modulus by coincidence and a green badge on it would be worse than no badge. Only the all-zero forms are denied. 11.111.111-1 and its siblings satisfy the modulus 11 the same way a repeated-digit CPF does, but the SII issues serials in those ranges, so refusing them would tell a real holder their real RUT is invalid."
+        "en": "The verification digit is the last character and the body is 4 to 8 digits, so written without the hyphen a value whose length is in that range twice over — an eight-character string is a seven-digit body and its digit, or an eight-digit body still missing one — is ambiguous; write it 12.345.678-5 and the boundary is stated. Until it is stated the rule is not run and the badge says so, because one incomplete value in ten satisfies the modulus by coincidence and a green badge on it would be worse than no badge. THE BODY IS FOUR DIGITS AND NOT SEVEN, and it was seven until the cited annex was read. That annex sets the RUT field at \"Valor mínimo 1000\" and SII's Formato DTE puts the body \"entre 100.000 y 99 millones\", so a seven-digit floor rejected serials the SII itself publishes as valid — an old low-numbered holder was told their own RUT was malformed. Failing closed on a real number is the worst thing this app can do, and it is the same argument the next sentence already made about the repeated-digit forms. Only the all-zero forms are denied. 11.111.111-1 and its siblings satisfy the modulus 11 the same way a repeated-digit CPF does, but the SII issues serials in those ranges, so refusing them would tell a real holder their real RUT is invalid."
       },
       "display": "##.###.###-#"
     }

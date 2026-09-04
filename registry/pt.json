@@ -13,7 +13,7 @@
       "label": {
         "en": "NIF"
       },
-      "format": "^[0-9]{9}$",
+      "format": "^[1-9][0-9]{8}$",
       "scope": "both",
       "checksum": {
         "engine": "mod11-weighted",
@@ -29,11 +29,8 @@
         ],
         "map": "lt2-zero"
       },
-      "denied": [
-        "000000000"
-      ],
       "note": {
-        "en": "The ninth digit is a modulus 11 over the eight before it, weighted 9 down to 2."
+        "en": "The ninth digit is a modulus 11 over the eight before it, weighted 9 down to 2. No NIF begins with 0: Decreto-Lei n.º 14/2013 allots 1 to 4 to pessoas singulares and 5 to 9 to the other categories, leaving 0 unissued. It is worth spending a character class on because of where a leading zero comes from — a nine-digit number that has been through a spreadsheet and come back zero-padded — and telling that user the shape is wrong is more useful than running a modulus over it. Dropping 0 from the first character also retired this identifier's all-zero guard: 000000000 can no longer reach the checksum at all, so a denied entry for it was a rule that could never fire. The value is still refused — one step earlier, on shape."
       },
       "display": "### ### ###"
     }

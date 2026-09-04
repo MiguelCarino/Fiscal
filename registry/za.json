@@ -30,13 +30,15 @@
       "label": {
         "en": "Income tax reference"
       },
-      "format": "^[0-9]{10}$",
+      "format": "^[0-39][0-9]{9}$",
       "scope": "both",
       "checksum": {
-        "engine": "structural"
+        "engine": "luhn-modN",
+        "alphabet": "0123456789",
+        "base": 10
       },
       "note": {
-        "en": "Structure only, and that is now a gap rather than a limit. This record used to say SARS publishes no check-digit rule for the income tax reference number — it does: §8.1 of the cited BRS, “Modulus 10 check on Income Tax Number”, gives a Luhn over the first nine digits with two worked examples (0001339050 and 0667056642). Implementing it needs an engine and fixtures, so it is written down here rather than half-done, and the badge still says format only because that is what runs."
+        "en": "Checked, and the rule is SARS's own. Section 8.1 of the cited BRS, \"Modulus 10 check on Income Tax Number\", doubles digits 1, 3, 5, 7 and 9, folds any result over nine into a single digit, and takes the check digit as ten minus the last digit of the total — which is plain Luhn over the first nine digits, so the shared luhn-modN engine runs it rather than a South African special case. Both of the worked examples SARS prints, 0001339050 and 0667056642, come back with the check digits its own tables compute, and both are fixtures below. The same page constrains the leading digit: 0, 1, 2 or 3 for Nature of Person A, B, C, D, M, N or R, and 9 for E, G and H — which is the format here, and is why a number beginning 4 to 8 is rejected on shape rather than on arithmetic. This record said for a while that SARS publishes no rule for this number. It does; the modulus 10 it publishes is for THIS identifier and not for the VAT number beside it."
       }
     }
   ],

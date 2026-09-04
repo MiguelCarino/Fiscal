@@ -123,6 +123,35 @@
     // fallback for engines without Intl.DisplayNames.
     let displayNames = null;
     let displayNamesLang = null;
+    /* The picker re-renders on every keystroke over all 249 jurisdictions, and both of these were
+       being rebuilt inside that loop. `displayNames.of` is memoised into a plain map because the
+       answer only changes when the locale does, and the collator is hoisted because
+       String.prototype.localeCompare constructs one PER COMPARISON — a 249-row sort is about
+       1,800 of them, per keypress, on a phone. Both caches are keyed by lang() and rebuilt when
+       it changes, which is the same trigger displayNames already used. */
+    let nameCache = null;
+    let nameCacheLang = null;
+    let collator = null;
+    let collatorLang = null;
+
+    function countryNames() {
+        if (nameCacheLang !== lang() || !nameCache || nameCache.size !== INDEX.length) {
+            const m = new Map();
+            for (let i = 0; i < INDEX.length; i++) m.set(INDEX[i].iso, countryName(INDEX[i].iso));
+            nameCache = m;
+            nameCacheLang = lang();
+        }
+        return nameCache;
+    }
+
+    function collate() {
+        if (collatorLang !== lang() || !collator) {
+            try { collator = new Intl.Collator(lang()); }
+            catch (e) { collator = { compare: (a, b) => a.localeCompare(b) }; }
+            collatorLang = lang();
+        }
+        return collator;
+    }
 
     function countryName(code) {
         const entry = BY_ISO[code];
@@ -798,12 +827,20 @@
         // add a card for, and the banner above already says why.
         $('#addCard').hidden = !!loadError;
 
+        /* Same two hoists the picker makes, for the same reason: this comparator ran
+           Intl.DisplayNames twice and built a collator twice on EVERY comparison. */
+        const wallNames = countryNames();
+        const wcmp = collate().compare;
+        const wallFrag = document.createDocumentFragment();
         cards.slice().sort((a, b) => {
             if ((a.iso === here) !== (b.iso === here)) return a.iso === here ? -1 : 1;
-            if (a.iso !== b.iso) return countryName(a.iso).localeCompare(countryName(b.iso));
+            if (a.iso !== b.iso) {
+                return wcmp(wallNames.get(a.iso) || a.iso, wallNames.get(b.iso) || b.iso);
+            }
             if (a.kind !== b.kind) return a.kind === 'business' ? -1 : 1;
-            return (a.label || '').localeCompare(b.label || '');
-        }).forEach((card) => host.append(tile(card)));
+            return wcmp(a.label || '', b.label || '');
+        }).forEach((card) => wallFrag.append(tile(card)));
+        host.append(wallFrag);
 
         if (!readOnly() && !loadError) host.append(addTile());
         if (!cards.length) host.append(exampleTile());
@@ -1573,9 +1610,11 @@
         list.innerHTML = '';
         const q = query.trim().toLowerCase();
         const owned = new Set(allCards().map((c) => c.iso));
+        const names = countryNames();   // a Map, so a jurisdiction called 'constructor' is a row
+        const cmp = collate().compare;
 
         const matched = INDEX
-            .map((c) => ({ c: c, name: countryName(c.iso) }))
+            .map((c) => ({ c: c, name: names.get(c.iso) || c.name }))
             .filter((r) => !q || r.name.toLowerCase().indexOf(q) !== -1
                 || r.c.iso.toLowerCase().indexOf(q) !== -1
                 || r.c.name.toLowerCase().indexOf(q) !== -1)
@@ -1586,10 +1625,13 @@
                 const bo = owned.has(b.c.iso) ? 0 : 1;
                 if (ao !== bo) return ao - bo;
                 if (a.c.tier !== b.c.tier) return a.c.tier - b.c.tier;
-                return a.name.localeCompare(b.name);
+                return cmp(a.name, b.name);
             });
         const rows = matched.slice(0, 120);
 
+        /* Built into a fragment and attached once. 120 rows of four children each is about 600
+           insertions into a live subtree; into a fragment it is none, and the list lands in one. */
+        const frag = document.createDocumentFragment();
         rows.forEach((r) => {
             const b = el('button', 'prow' + (r.c.iso === iso ? ' on' : ''));
             // The gold bar and the bold name are what say "this is the one you
@@ -1608,8 +1650,9 @@
                 if (pickerAdds) await openEditor(null);
                 else await render();
             }));
-            list.append(b);
+            frag.append(b);
         });
+        list.append(frag);
 
         // The list is cut at 120 rows, so the count is also the disclosure that
         // the rest exist and how to reach them.
@@ -1997,6 +2040,24 @@
         const input = el(multiline ? 'textarea' : 'input', multiline ? 'textarea' : 'input');
         input.value = value;
         if (placeholder) input.placeholder = placeholder;
+        /* THE KEYBOARD IS DERIVED FROM THE FORMAT, NOT LISTED PER COUNTRY. An identifier whose
+           published shape admits no letter — a RUC, a NIF, an AFM, a CPF — should raise a phone's
+           number pad and not its QWERTY, because the whole posture this app is used in is somebody
+           typing eleven digits at a counter. The registry already states the shape, so the answer
+           is read off the record's own regex rather than written down a second time in a list that
+           would then have to be kept in step with it: no character class in the pattern mentions a
+           letter, so no letter can be typed.
+           inputmode and not type="number", deliberately — a number input strips leading zeros,
+           offers a spinner, and in several browsers refuses a value it considers malformed, and a
+           tax identifier is a STRING of digits, not a quantity. inputmode only picks the keyboard.
+           Chile is the case that proves the derivation right: its RUT ends in a digit or a K, its
+           pattern says so, and it correctly keeps the full keyboard. */
+        if (!multiline && identDef && typeof identDef.format === 'string'
+            && !/[A-Za-z]/.test(identDef.format)) {
+            input.inputMode = 'numeric';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+        }
         const hint = el('div', 'ed-hint');
         // What the verdict rests on, beside the field rather than in a hover:
         // there is nothing to hover with on a phone, and the line that says an

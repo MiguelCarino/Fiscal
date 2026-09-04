@@ -11,7 +11,7 @@
        with it the offline promise, silently stops registering. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-eeGMqkswBxO9floUJRxZQC9nAIIqvWUDax2KhET7Ac8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/webp" href="logo.webp">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -111,7 +111,16 @@
     ::-webkit-scrollbar-thumb{background:var(--border-ui);border-radius:6px;}
     ::-webkit-scrollbar-thumb:hover{background:var(--accent-dim);}
     body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
-      font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+      font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+      /* THE STATUS BAR IS OURS TO PAINT UNDER, WHICH IS A CHOICE MADE IN THE HEAD OF THIS FILE.
+         apple-mobile-web-app-status-bar-style is black-translucent, so an installed copy draws
+         edge to edge and the shared navbar would otherwise sit UNDER the clock and the notch.
+         viewport-fit=cover on the viewport tag is what makes env() return anything at all — the
+         insets are zero without it — and the padding here is what the navbar stands on. It is the
+         body and not the navbar because carino-navbar.js is a propagated fleet file: editing it
+         here would be overwritten by the next run of Carino-Systems/propagate.sh. The inset area
+         shows --bg, which is #050505, which is the theme-color, so the seam does not read. */
+      padding-top:env(safe-area-inset-top);}
     a{color:var(--accent);text-decoration:none;}
     a:hover{color:var(--primary-hover);}
     button{font-family:inherit;}
@@ -125,12 +134,16 @@
        tab stop it costs. It is put back in front of the injected header at the
        foot of this file. */
     .skip{position:absolute;left:-9999px;top:auto;}
-    .skip:focus{position:fixed;left:10px;top:10px;z-index:2147483001;
+    .skip:focus{position:fixed;z-index:2147483001;
+      left:calc(10px + env(safe-area-inset-left));top:calc(10px + env(safe-area-inset-top));
       background:var(--accent);color:#050505;font-family:var(--mono);
       font-size:var(--fs-btn);font-weight:700;text-transform:uppercase;
       letter-spacing:0.06em;padding:10px 14px;border-radius:6px;}
 
-    .wrap{max-width:900px;margin:0 auto;padding:0 var(--gutter) 100px;}
+    /* max() and not calc(): on a phone held sideways the notch eats one side only, and the
+       gutter is already wider than the inset on every device that has none. */
+    .wrap{max-width:900px;margin:0 auto;
+      padding:0 max(var(--gutter),env(safe-area-inset-right)) 100px max(var(--gutter),env(safe-area-inset-left));}
 
     /* ---------- masthead ---------- */
     /* The navbar already says FISCAL, so the page does not need to shout it
@@ -427,7 +440,11 @@
     .privacy .row:has(#offlineState:empty)::before{content:none;}
 
     /* ---------- update bar ---------- */
-    .updatebar{position:fixed;left:12px;right:12px;bottom:12px;z-index:2147482000;
+    /* Clear of the home indicator, which is what sits in the bottom inset and is exactly where
+       a fixed bar 12px off the floor would otherwise land. */
+    .updatebar{position:fixed;z-index:2147482000;
+      left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+      bottom:calc(12px + env(safe-area-inset-bottom));
       display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
       background:var(--bg-elev);border:1px solid var(--accent-dim);border-radius:10px;
       padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,0.7);
@@ -471,6 +488,16 @@
     .input:focus,.select:focus,.textarea:focus{border-color:var(--accent);
       box-shadow:0 0 0 3px var(--accent-faint);}
     .textarea{resize:vertical;min-height:70px;}
+    /* SIXTEEN PIXELS ON A TOUCH DEVICE, AND IT IS NOT A TYPE DECISION. Mobile Safari zooms the
+       whole page in whenever a field it is focusing has a font under 16px, and then leaves the
+       user pinching back out — on a form whose entire job is typing a tax number at a counter,
+       with a keyboard already covering half the screen. --fs-sm is 0.8rem, which is 12.8px, so
+       every field in this app tripped it. The rule is scoped to pointer:coarse so the desktop
+       keeps the density the rest of the page is set at, and 16px is exact rather than generous
+       because it is a threshold, not a preference. */
+    @media (pointer:coarse){
+      .input,.select,.textarea{font-size:16px;}
+    }
     .select option{background:var(--bg-elev);color:var(--text);}
     /* The UA draws this button itself, and unstyled it is the loudest object on
        an otherwise black dialog. */
@@ -626,9 +653,14 @@
 
     @media(max-width:520px){
       :root{--gutter:14px;}
-      .wrap{padding:0 var(--gutter) 80px;}
+      /* These two re-state the safe-area maths rather than the plain numbers, because this is the
+         breakpoint the insets actually exist at — a phone. Overriding with bare 14px and 8px here
+         would have undone the notch and home-indicator handling on exactly the devices that have
+         one, while leaving it working on the desktop that does not. */
+      .wrap{padding:0 max(var(--gutter),env(safe-area-inset-right)) 80px max(var(--gutter),env(safe-area-inset-left));}
       .f-v{font-size:1.6rem;}
-      .updatebar{left:8px;right:8px;bottom:8px;}
+      .updatebar{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));
+        bottom:calc(8px + env(safe-area-inset-bottom));}
     }
     /* A phone at 320px, or 400% zoom of a laptop. The action buttons keep their
        nowrap labels and give back horizontal padding instead, so the row wraps
