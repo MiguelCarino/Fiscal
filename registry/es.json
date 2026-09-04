@@ -19,13 +19,8 @@
         "engine": "es-nif"
       },
       "note": {
-        "en": "One engine for all three shapes AEAT issues: the DNI's letter over the eight digits, the NIE's letter with X, Y or Z folded to 0, 1 or 2 first, and the legal-entity NIF whose final character is a digit for some letter classes and a letter for others. They are one identifier to the holder and one field on the card, so they are one engine here."
-      },
-      "denied": [
-        "00000000T",
-        "X0000000T",
-        "A00000000"
-      ]
+        "en": "Three rules under one nine-character shape, which is why they are one engine here and one field on the card. A DNI is eight digits and a letter taken off a mod-23 table; an NIE is that same rule once the leading X, Y or Z has been read back as the 0, 1 or 2 it stands for; a CIF is an entity-type letter, seven digits, and a control computed Luhn-wise over them. THE CIF CONTROL IS THREE CASES AND ONLY TWO OF THEM CAN BE NAMED. For K, P, Q, R, S, N and W the register always issues it as a letter, and for A, B, E and H always as a digit, so those are checked against the one they must be and a failure can report the character it expected. Every other entity type takes either, and which one it got was the register's decision rather than the arithmetic's — so a mismatch there is reported without naming an expected character. Naming one would send half of those holders to a NIF that is not theirs, and \"wrong\" is honest where \"should be 1\" is not. There is no denied list, and the absence is the point: the all-zero form of each of the three shapes — 00000000T, X0000000T, A00000000 — satisfies its own arithmetic, and all three are already refused by the shared zero-serial rule in js/engines.js, which reads the serial the engine says was allocated rather than the number as typed. Listing them again per record would be a second copy of a general rule, and the second copy is the one that drifts."
+      }
     }
   ],
   "invoiceProfile": {
