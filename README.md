@@ -3,6 +3,8 @@
 **fiscal.carino.systems** — your tax identity, personal and business, for every
 jurisdiction you file in. Offline, on-device, never transmitted.
 
+![Fiscal](screenshot.webp)
+
 Dealing with tax information in more than one country means reciting the same
 numbers at counters that each want them in a different shape: an RFC plus a
 régimen fiscal in Mexico, a document type plus a number in Colombia, a name and
