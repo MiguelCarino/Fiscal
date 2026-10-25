@@ -76,6 +76,11 @@ const I18N = {
     },
 
     es: {
+        // Navbar Export menu, the fleet privacy line and the empty state's example chip
+        "Runs in your browser. Nothing you add here is uploaded.": "Funciona en tu navegador. Nada de lo que añades aquí se sube.",
+        "Try:": "Prueba:",
+        "Export": "Exportar",
+        "More": "Más",
         // Masthead
         'Skip to your cards': 'Ir a tus tarjetas',
         'Offline · nothing leaves this device': 'Sin conexión · nada sale de este dispositivo',
@@ -338,6 +343,11 @@ const I18N = {
     },
 
     'pt-BR': {
+        // Navbar Export menu, the fleet privacy line and the empty state's example chip
+        "Runs in your browser. Nothing you add here is uploaded.": "Roda no seu navegador. Nada do que você adiciona aqui é enviado.",
+        "Try:": "Experimente:",
+        "Export": "Exportar",
+        "More": "Mais",
         // Masthead
         'Skip to your cards': 'Ir para seus cartões',
         'Offline · nothing leaves this device': 'Offline · nada sai deste aparelho',
@@ -601,6 +611,11 @@ const I18N = {
     },
 
     ja: {
+        // Navbar Export menu, the fleet privacy line and the empty state's example chip
+        "Runs in your browser. Nothing you add here is uploaded.": "ブラウザ内で動作します。ここに追加したものはアップロードされません。",
+        "Try:": "例:",
+        "Export": "書き出す",
+        "More": "その他",
         // Masthead
         'Skip to your cards': 'カード一覧へ移動',
         'Offline · nothing leaves this device': 'オフライン・この端末から何も出ません',
@@ -865,6 +880,11 @@ const I18N = {
     },
 
     ru: {
+        // Navbar Export menu, the fleet privacy line and the empty state's example chip
+        "Runs in your browser. Nothing you add here is uploaded.": "Работает в вашем браузере. Ничего из добавленного сюда не загружается.",
+        "Try:": "Попробуйте:",
+        "Export": "Экспорт",
+        "More": "Ещё",
         // Masthead
         'Skip to your cards': 'Перейти к картам',
         'Offline · nothing leaves this device': 'Офлайн · ничего не покидает это устройство',

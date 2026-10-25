@@ -46,29 +46,27 @@
   <!-- /carino:head -->
 
   <link rel="stylesheet" href="fonts/carino-fonts.css">
+  <link rel="stylesheet" href="carino-ui.css">
 
   <style>
-    /* Every colour the app draws with is declared here, on bare :root, before
-       any media block narrows it — so the un-stamped system default renders the
-       same palette as an explicit choice, and no token exists only inside a
-       query. color-scheme tells the UA to draw its own widgets (file buttons,
-       the search field's clear affordance, form chrome) dark, instead of
-       dropping a light control into the middle of a black dialog. */
+    /* The fleet palette, fonts and type scale come from carino-ui.css, linked
+       above. What follows on bare :root are this app's own tokens, declared
+       before any media block narrows them, so the un-stamped system default
+       renders the same palette as an explicit choice. color-scheme tells the UA
+       to draw its own widgets (file buttons, the search field's clear
+       affordance, form chrome) dark, instead of dropping a light control into
+       the middle of a black dialog.
+
+       Type: the field labels and validation badges are read off a screen held
+       out across a counter, not up close, so they are set in --fs-sm rather
+       than in the fleet's --fs-micro / --fs-label floor sizes. */
     :root{
       color-scheme:dark;
-      --accent:#eab308; --accent-faint:rgba(234,179,8,0.05); --accent-glow:rgba(234,179,8,0.15);
-      --accent-dim:rgba(234,179,8,0.30); --primary-hover:#fbbf24;
-      --bg:#050505; --bg-elev:#0d0d0d; --bg-card:#0b0b0b;
-      /* --text-muted carries the country on every tile, the field name beside
-         every identifier and the whole privacy block. None of that is
-         decoration, so it is held to the body-text floor rather than to the
-         3:1 one, and sits one step below --text-sec instead of far below it. */
-      --text:#fff; --text-sec:#a3a3a3; --text-muted:#8a8a8a;
+      --primary-hover:#fbbf24;
       /* --border draws decoration — dividers, the edges of surfaces. A control's
          own outline is held to 3:1 by 1.4.11 and needs --border-ui; #262626 is
          1.3:1 and cannot carry one. */
-      --border:#262626; --border-ui:#5f5f5f;
-      --ok:#22c55e; --err:#ef4444; --warn:#eab308; --info:#38bdf8;
+      --border-ui:#5f5f5f;
       /* The caveat must not be quieter than the reassurance: "format only"
          reads at 13.5:1, the same order as "check digit valid" at 8.6:1. */
       --ochre-warn:#fcd34d;
@@ -95,18 +93,6 @@
          hover border, never a filled card. */
       --kind-business:#eab308; --kind-business-soft:rgba(234,179,8,0.09);
       --kind-personal:#38bdf8; --kind-personal-soft:rgba(56,189,248,0.09);
-      --stage-grad:radial-gradient(1200px 520px at 50% -12%,rgba(234,179,8,0.08) 0%,transparent 60%),
-        linear-gradient(180deg,#0b0b0b 0%,#050505 100%);
-      --gold-text:linear-gradient(130deg,#fef08a 0%,#eab308 50%,#b45309 100%);
-      --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
-      --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-      --display:'Red Hat Display',var(--sans);
-      /* --fs-micro sets the field labels and the validation badges, which are
-         read off a screen held out across a counter, not up close. */
-      --fs-micro:0.7rem; --fs-label:0.75rem; --fs-btn:0.7rem; --fs-sm:0.8rem;
-      --fs-mono:0.85rem; --fs-sec:0.9rem; --fs-body:1rem; --fs-lg:1.05rem;
-      --fs-h3:1.2rem; --fs-h2:1.5rem; --fs-h1:1.9rem;
-      --radius:10px;
       --gutter:20px;
     }
     /* Someone who has told their OS they need more contrast gets it without
@@ -163,7 +149,7 @@
 
     /* max() and not calc(): on a phone held sideways the notch eats one side only, and the
        gutter is already wider than the inset on every device that has none. */
-    .wrap{max-width:900px;margin:0 auto;
+    .wrap{width:100%;max-width:900px;margin:0 auto;display:block;
       padding:0 max(var(--gutter),env(safe-area-inset-right)) 100px max(var(--gutter),env(safe-area-inset-left));}
 
     /* ---------- masthead ---------- */
@@ -174,6 +160,7 @@
     .mast{background:var(--stage-grad);border-bottom:1px solid var(--border);
       margin:0 calc(-1 * var(--gutter)) 26px;
       padding:26px var(--gutter) 20px;display:flex;flex-direction:column;gap:7px;}
+    .mast .mark{width:48px;height:48px;display:block;margin-bottom:6px;}
     .mast .kicker{margin:0 0 2px;font-family:var(--mono);font-size:var(--fs-btn);
       font-weight:700;letter-spacing:0.28em;text-transform:uppercase;color:var(--accent);}
     .mast .lede{margin:0;font-family:var(--display);font-weight:700;
@@ -191,7 +178,7 @@
     .alert.err{color:var(--err-text);background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.7);}
 
     /* ---------- pills ---------- */
-    .pill{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;
+    .pill{font-family:var(--mono);font-size:var(--fs-sm);text-transform:uppercase;
       letter-spacing:0.05em;border-radius:999px;padding:3px 10px;border:1px solid;white-space:nowrap;}
     .pill.t1{color:var(--ok);border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.08);}
     .pill.t2{color:var(--accent);border-color:rgba(234,179,8,0.4);background:rgba(234,179,8,0.08);}
@@ -222,9 +209,9 @@
     /* ---------- the card face ---------- */
     .f{display:flex;flex-direction:column;gap:5px;}
     .f-head{display:flex;align-items:baseline;gap:10px;}
-    .f-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.14em;
+    .f-k{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.14em;
       text-transform:uppercase;color:var(--text-muted);flex:1;}
-    .f-copy{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
+    .f-copy{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.1em;
       text-transform:uppercase;background:transparent;border:1px solid var(--border-ui);
       color:var(--text-muted);border-radius:4px;padding:2px 7px;cursor:pointer;transition:0.15s;}
     .f-copy:hover{border-color:var(--accent);color:var(--accent);}
@@ -239,7 +226,7 @@
     /* A secondary value is not what the card is held up for: it gives back the
        lead row's size and weight so one number stays the heavy thing on screen. */
     .f-v--sm{font-size:var(--fs-lg);font-weight:400;letter-spacing:0.02em;}
-    .f-badge{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.08em;
+    .f-badge{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.08em;
       text-transform:uppercase;}
     /* Three verdicts, three glyphs, three colours — and the one that says the
        number is wrong also carries the weight, so it is never the quietest of
@@ -250,7 +237,7 @@
     .f-badge.warn::before{content:"! ";}
     .f-phon{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.5;
       border-left:2px solid var(--accent-dim);padding-left:10px;margin-top:3px;}
-    .f-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .f-note{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       line-height:1.6;border-top:1px solid var(--border);padding-top:14px;}
     /* The caveat that qualifies a green badge — how far the pass actually goes.
        A footnote under a rule is what the eye skips; this belongs to the badge
@@ -264,11 +251,11 @@
     .banner span{flex:1;min-width:200px;}
 
     /* Tax data goes stale silently; this is the only place the app nags. */
-    .f-stale{font-family:var(--mono);font-size:var(--fs-micro);color:var(--ochre-warn);
+    .f-stale{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ochre-warn);
       border-left:2px solid rgba(234,179,8,0.5);padding-left:10px;line-height:1.6;}
     .f-einv{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--border);
       padding-top:14px;}
-    .einv-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.1em;
+    .einv-k{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.1em;
       text-transform:uppercase;}
     .f-einv.mandatory .einv-k{color:var(--accent);}
     .f-einv.scheduled .einv-k{color:var(--info);}
@@ -288,7 +275,7 @@
       margin-bottom:20px;background:var(--bg-elev);}
     .rv-t{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
       line-height:1.2;margin-bottom:4px;}
-    .rv-d{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .rv-d{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       margin:0 0 12px;line-height:1.6;}
     .rv-problem{font-family:var(--mono);font-size:var(--fs-sm);color:var(--ochre-warn);
       line-height:1.6;margin-bottom:12px;}
@@ -297,19 +284,19 @@
     .rv-row input[type=checkbox]{margin:3px 0 0;width:16px;height:16px;flex:none;
       accent-color:var(--accent);}
     .rv-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
-    .rv-k{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+    .rv-k{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.12em;
       text-transform:uppercase;color:var(--text-muted);}
     .rv-v{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text);
       overflow-wrap:anywhere;}
-    .rv-seen{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);}
+    .rv-seen{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);}
     .rv-why{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.55;}
     /* A blocked candidate is struck out and un-tickable: colour alone never says
        this value cannot be used. */
     .rv-row.blocked .rv-v{text-decoration:line-through;color:var(--text-muted);}
     .rv-row.blocked .rv-why{color:var(--err-text);}
-    .rv-notes{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .rv-notes{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       line-height:1.7;margin-top:12px;}
-    .rv-missing{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .rv-missing{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       line-height:1.7;margin-top:8px;}
     .rv-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
 
@@ -323,7 +310,7 @@
     .shr-r{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
       overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
     .shr-tab{flex:1;display:block;text-align:center;font-family:var(--mono);
-      font-size:var(--fs-micro);letter-spacing:0.1em;text-transform:uppercase;
+      font-size:var(--fs-sm);letter-spacing:0.1em;text-transform:uppercase;
       background:transparent;border:1px solid var(--border-ui);color:var(--text-muted);
       border-radius:6px;padding:7px 8px;cursor:pointer;transition:0.15s;}
     .shr-tab:hover{border-color:var(--accent);color:var(--accent);}
@@ -336,11 +323,11 @@
     #shareQr{display:flex;justify-content:center;padding:14px;background:#fff;
       border-radius:8px;overflow:auto;}
     #shareQr canvas{display:block;image-rendering:pixelated;}
-    #shareWhat{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    #shareWhat{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       line-height:1.6;margin-top:12px;}
     .shr-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
     .shr-acts .btn{flex:1;justify-content:center;min-width:130px;}
-    .shr-warn{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .shr-warn{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       line-height:1.6;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;}
 
     #bigSpeak{margin-right:8px;}
@@ -348,11 +335,10 @@
     /* ---------- empty state ---------- */
     /* First run is the weakest screen in the app: it should say what this is
        for before it shows a sample of it. */
-    .empty{display:flex;flex-direction:column;gap:10px;align-items:flex-start;
-      margin-top:18px;}
+    .empty{margin-top:18px;max-width:none;padding:28px 16px 8px;}
     .empty-t{font-family:var(--display);font-weight:700;font-size:var(--fs-h3);}
     .empty-d{color:var(--text-sec);font-size:var(--fs-sec);max-width:52ch;}
-    .example-tag{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.16em;
+    .example-tag{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.16em;
       text-transform:uppercase;color:var(--text-muted);}
 
     /* ---------- the wall ---------- */
@@ -379,7 +365,7 @@
 
     .t-top{display:flex;align-items:center;gap:8px;}
     .t-flag{font-size:1.15rem;line-height:1;}
-    .t-country{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.13em;
+    .t-country{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.13em;
       text-transform:uppercase;color:var(--text-muted);flex:1;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap;}
     .t-label{font-family:var(--display);font-weight:700;font-size:var(--fs-lg);
@@ -388,10 +374,10 @@
       letter-spacing:0.04em;font-variant-numeric:tabular-nums;overflow:hidden;
       text-overflow:ellipsis;white-space:nowrap;}
     .t-foot{display:flex;align-items:center;gap:8px;margin-top:2px;}
-    .t-kind{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+    .t-kind{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.12em;
       text-transform:uppercase;color:var(--kind);border:1px solid var(--kind);
       border-radius:999px;padding:2px 8px;opacity:0.85;}
-    .t-warn{margin-left:auto;font-size:var(--fs-micro);color:var(--warn);
+    .t-warn{margin-left:auto;font-size:var(--fs-sm);color:var(--warn);
       font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;}
     .t-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
       background:var(--warn);margin-right:6px;vertical-align:middle;}
@@ -408,19 +394,19 @@
     #cardDlg{max-width:520px;}
     #cardDlg .dlg-head{align-items:flex-start;}
     .dh{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
-    .dh-country{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.13em;
+    .dh-country{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.13em;
       text-transform:uppercase;color:var(--text-muted);}
     .dh-label{font-family:var(--display);font-weight:800;font-size:var(--fs-h3);
       line-height:1.2;overflow:hidden;text-overflow:ellipsis;}
     #cardDlg[data-kind="personal"]{border-top:3px solid var(--kind-personal);}
     #cardDlg[data-kind="business"]{border-top:3px solid var(--kind-business);}
     .detail-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;align-items:center;}
-    .jauth{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    .jauth{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       letter-spacing:0.04em;}
     #detailFields{display:flex;flex-direction:column;gap:20px;}
     .detail-addr{margin-top:20px;border-top:1px solid var(--border);padding-top:14px;
       display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
-    .detail-addr .da-k{font-family:var(--mono);font-size:var(--fs-micro);
+    .detail-addr .da-k{font-family:var(--mono);font-size:var(--fs-sm);
       letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);width:100%;}
     .detail-addr code{flex:1;min-width:150px;font-family:var(--mono);font-size:var(--fs-sm);
       color:var(--accent);background:var(--bg-elev);border:1px solid var(--border);
@@ -446,7 +432,12 @@
     .privacy b{color:var(--text-sec);font-weight:600;}
     .privacy .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
     .privacy .row::before{content:"—";color:var(--accent);}
-    .privacy .tools{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
+    .privacy .pv-lead{margin-bottom:12px;}
+
+    /* ---------- export menu (navbar) ---------- */
+    /* Every way in and out of this device — backup, restore, check, erase —
+       sits in one navbar menu (Branding #workspace), relocated there by
+       carino-navbar.js from the actions block at the top of <body>. */
     /* Ready, not ready and not known are three states, and the third one shows
        nothing at all: app.js leaves the span empty and the row below costs
        nothing while it is. */
@@ -471,7 +462,7 @@
       padding:12px 14px;box-shadow:0 18px 44px rgba(0,0,0,0.7);
       font-family:var(--mono);font-size:var(--fs-sm);color:var(--text);
       max-width:640px;margin:0 auto;}
-    .updatebar .ub-warn{flex-basis:100%;font-size:var(--fs-micro);color:var(--ochre-warn);}
+    .updatebar .ub-warn{flex-basis:100%;font-size:var(--fs-sm);color:var(--ochre-warn);}
     .updatebar .btn{margin-left:auto;}
     .updatebar .ub-x{margin-left:0;padding:0 10px;}
 
@@ -522,7 +513,7 @@
       word-break:break-all;}
     .chk-hits{display:flex;flex-direction:column;gap:4px;margin-left:auto;align-items:flex-end;}
     .chk-hit{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;justify-content:flex-end;}
-    .chk-where{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-sec);
+    .chk-where{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-sec);
       text-transform:uppercase;letter-spacing:0.08em;}
     .chk-none{font-size:var(--fs-sm);color:var(--text-sec);margin-left:auto;text-align:right;}
     /* On a phone the two halves stop being a row: the number goes on top and its verdicts sit
@@ -553,9 +544,9 @@
     .input[type=file]::file-selector-button:hover{border-color:var(--accent);color:var(--accent);}
 
     .ed-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
-    .ed-k{font-family:var(--mono);font-size:var(--fs-label);text-transform:uppercase;
+    .ed-k{font-family:var(--mono);font-size:var(--fs-sm);text-transform:uppercase;
       letter-spacing:0.1em;color:var(--text-muted);}
-    .ed-hint{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.06em;
+    .ed-hint{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.06em;
       text-transform:uppercase;color:var(--text-muted);min-height:12px;}
     .ed-hint.ok{color:var(--ok);} .ed-hint.err{color:var(--err-loud);}
     .ed-hint.warn{color:var(--ochre-warn);}
@@ -573,14 +564,14 @@
       align-self:flex-start;border:1px dashed currentColor;border-radius:4px;
       padding:3px 8px;}
     .ed-hint.err:not(:empty){border-width:2px;border-style:solid;font-weight:700;}
-    .ed-note{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);line-height:1.6;}
-    .ed-link{font-family:var(--mono);font-size:var(--fs-micro);text-transform:uppercase;letter-spacing:0.1em;}
+    .ed-note{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);line-height:1.6;}
+    .ed-link{font-family:var(--mono);font-size:var(--fs-sm);text-transform:uppercase;letter-spacing:0.1em;}
     .ed-check{display:flex;align-items:center;gap:9px;font-family:var(--mono);
       font-size:var(--fs-sm);color:var(--text-sec);cursor:pointer;margin-bottom:14px;}
     .ed-check input{width:16px;height:16px;accent-color:var(--accent);}
     .refused{border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.06);
       border-radius:8px;padding:12px 14px;margin-bottom:16px;}
-    .refused-t{font-family:var(--mono);font-size:var(--fs-micro);letter-spacing:0.12em;
+    .refused-t{font-family:var(--mono);font-size:var(--fs-sm);letter-spacing:0.12em;
       text-transform:uppercase;color:var(--err-text);margin-bottom:6px;}
     .refused-d{font-size:var(--fs-sm);color:var(--text-sec);line-height:1.6;}
     /* Every other .refused block explains something the app has already decided.
@@ -610,9 +601,9 @@
     .prow.on .p-name{color:var(--accent);font-weight:700;}
     .p-flag{font-size:1.15rem;}
     .p-name{flex:1;font-size:var(--fs-sec);}
-    .p-own{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
+    .p-own{font-family:var(--mono);font-size:var(--fs-sm);color:var(--accent);
       text-transform:uppercase;letter-spacing:0.1em;}
-    #pickerCount{font-family:var(--mono);font-size:var(--fs-micro);color:var(--text-muted);
+    #pickerCount{font-family:var(--mono);font-size:var(--fs-sm);color:var(--text-muted);
       padding:10px 2px 0;letter-spacing:0.08em;text-transform:uppercase;}
 
     /* ---------- counter mode ---------- */
@@ -674,7 +665,7 @@
     .big-head{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
     .big-country{font-family:var(--display);font-weight:900;font-size:var(--fs-h3);
       text-transform:uppercase;letter-spacing:1px;}
-    .big-label{font-family:var(--mono);font-size:var(--fs-micro);color:var(--accent);
+    .big-label{font-family:var(--mono);font-size:var(--fs-sm);color:var(--accent);
       text-transform:uppercase;letter-spacing:0.14em;}
 
     #qrDlg .dlg-body{display:flex;justify-content:center;background:#fff;}
@@ -827,9 +818,24 @@
 
 <a class="skip" id="skipLink" href="#main" data-i18n>Skip to your cards</a>
 
-<main class="wrap" id="main" tabindex="-1">
+<div data-carino-actions>
+  <div class="cs-menu">
+    <button type="button" class="cs-btn cs-menu-btn" id="exportMenuBtn" data-priority="1" aria-haspopup="true" aria-expanded="false"><span data-i18n>Export</span> <span class="cs-caret" aria-hidden="true">▾</span></button>
+    <div class="cs-menu-panel" id="exportMenu" role="menu" aria-labelledby="exportMenuBtn" hidden>
+      <button type="button" class="cs-menu-item" id="exportBtn" role="menuitem" data-i18n>Copy a backup</button>
+      <button type="button" class="cs-menu-item" id="restoreBtn" role="menuitem" data-i18n>Restore from a backup</button>
+      <div class="cs-menu-div"></div>
+      <button type="button" class="cs-menu-item" id="checkBtn" role="menuitem" data-i18n>Check a number</button>
+      <div class="cs-menu-div"></div>
+      <button type="button" class="cs-menu-item btn-danger" id="eraseBtn" role="menuitem" data-i18n>Erase everything</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap col" id="main" tabindex="-1">
 
   <header class="mast">
+    <img class="mark" src="logo.svg" alt="" width="48" height="48">
     <p class="kicker" data-i18n>Works offline. Nothing leaves this device.</p>
     <h1 class="lede" data-i18n>Your tax numbers for every country, ready to read out at the counter.</h1>
     <p class="sub">
@@ -860,15 +866,18 @@
       </div>
       <button class="btn btn-primary" id="addCard" data-i18n>Add card</button>
     </div>
-    <div class="empty" id="emptyIntro" hidden>
+    <div class="short-hero empty" id="emptyIntro" hidden>
       <p class="empty-t" data-i18n>No card yet</p>
       <p class="empty-d" data-i18n>Add one and it stays on this device — nothing is ever sent anywhere.</p>
+      <div class="examples"><span class="ex-label" data-i18n>Try:</span><button type="button" class="chip-tag" id="demoChip" data-i18n>See it with sample cards</button></div>
+      <p class="privacy-line" data-i18n>Runs in your browser. Nothing you add here is uploaded.</p>
     </div>
     <div class="grid" id="cardGrid"></div>
   </section>
 
   <section class="manage">
     <div class="privacy">
+      <p class="privacy-line pv-lead" data-i18n>Runs in your browser. Nothing you add here is uploaded.</p>
       <!-- The old wording claimed no network requests at all after load, which a
            reader disproves in one devtools screenshot: the registry record for a
            country is fetched when that card is opened. On the one panel whose
@@ -883,12 +892,6 @@
            two sentences chosen at runtime and carries a date, so it is written through TT() from
            the script rather than swapped in place by applyStaticI18n. -->
       <div class="row" id="backupRow"><span class="warn" id="backupNote" role="status" hidden></span></div>
-      <div class="tools">
-        <button class="btn btn-ghost" id="checkBtn" data-i18n>Check a number</button>
-        <button class="btn btn-ghost" id="exportBtn" data-i18n>Copy a backup</button>
-        <button class="btn btn-ghost" id="restoreBtn" data-i18n>Restore from a backup</button>
-        <button class="btn btn-ghost btn-danger" id="eraseBtn" data-i18n>Erase everything</button>
-      </div>
     </div>
   </section>
 
@@ -1115,6 +1118,8 @@
 </div>
 
 <script src="carino-navbar.js" data-app="Fiscal" data-repo="Fiscal" defer></script>
+<!-- The Export menu (and any drawer) are wired by the shared UI script. -->
+<script src="carino-ui.js" defer></script>
 <script src="carino-lang.js" defer></script>
 <script src="vendor/qrcode-generator-1.4.4.js" defer></script>
 <script src="carino-bridge.js" defer></script>

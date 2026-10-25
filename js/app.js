@@ -3230,6 +3230,10 @@
             location.hash = 'demo';
             location.reload();
         });
+        // The empty state's example chip is the same door as the masthead link.
+        const demoChip = $('#demoChip');
+        if (demoChip && demoLink) demoChip.addEventListener('click', () => demoLink.click());
+
 
         reflectStorage();
         reflectBackup();
