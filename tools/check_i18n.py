@@ -49,6 +49,8 @@ DYNAMIC = {
     ("carino-navbar.js", "s"): [
         "Late shift.", "Good morning.", "Good afternoon.", "Good evening.",
     ],
+    # the theme switch's label; carino-theme.js carries its own four locales
+    ("carino-theme.js", "key"): [],
 }
 
 # Translated ahead of the markup that will show them. A key sits here only with

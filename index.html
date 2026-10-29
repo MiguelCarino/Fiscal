@@ -6,17 +6,17 @@
        is what turns "we read the code and found no egress" into something the
        browser enforces on every future edit: no third-party origin can be
        reached, and the only script that may run is one served from here. The
-       hash covers the registration block at the foot of this file — change a
+       first hash covers the registration block at the foot of this file — change a
        byte of it and the hash must be recomputed or the service worker, and
-       with it the offline promise, silently stops registering. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-eeGMqkswBxO9floUJRxZQC9nAIIqvWUDax2KhET7Ac8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+       with it the offline promise, silently stops registering. The second covers
+       the theme's first-paint block (carino-theme), under the same rule. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-eeGMqkswBxO9floUJRxZQC9nAIIqvWUDax2KhET7Ac8=' 'sha256-nLOxN9NAyU6/BFv+84gVfCVEZjWILVDWTODOOzeFVaA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <link rel="icon" type="image/webp" href="logo.webp">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#050505">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -45,6 +45,24 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Fiscal", "url": "https://fiscal.carino.systems/", "description": "An offline card that holds your fiscal identity — personal and business — for every jurisdiction you file in. Check digits validated on device, spelled out phonetically for the counter, and never sent anywhere.", "operatingSystem": "Any (runs in a web browser)", "isAccessibleForFree": true, "author": {"@type": "Person", "name": "Miguel Cariño", "url": "https://carino.systems/"}}</script>
   <!-- /carino:head -->
 
+  <!-- Theme before first paint, so neither theme flashes the other:
+       ?theme=gold|color (review links; not stored) > carino-theme cookie
+       (shared across *.carino.systems) > localStorage > Gold & Black. -->
+  <meta name="theme-color" content="#050505" id="carinoThemeColor">
+  <script>
+  (function () {
+    var d = document.documentElement, t = null;
+    function pick(v) { return v === 'gold' ? 'gold' : (v === 'color' || v === 'colour') ? 'color' : null; }
+    try { t = pick(new URLSearchParams(location.search).get('theme')); } catch (e) {}
+    if (!t) { try { var m = document.cookie.match(/(?:^|;\s*)carino-theme=([^;]*)/); if (m) t = pick(decodeURIComponent(m[1])); } catch (e) {} }
+    if (!t) { try { t = pick(localStorage.getItem('carino-theme')); } catch (e) {} }
+    t = t || 'gold';
+    d.setAttribute('data-carino-theme', t);
+    var dark = d.getAttribute('data-theme') !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+    var meta = document.getElementById('carinoThemeColor');
+    if (meta) meta.content = t === 'gold' ? '#050505' : (dark ? '#0e1420' : '#eef3fc');
+  })();
+  </script>
   <link rel="stylesheet" href="fonts/carino-fonts.css">
   <link rel="stylesheet" href="carino-ui.css">
 
@@ -813,6 +831,30 @@
       .ps-phon:empty,.ps-rows:empty,.ps-note:empty,.ps-src:empty{display:none;}
     }
   </style>
+  <!-- Colourful theme + the switch; nothing applies until data-carino-theme="color". -->
+  <link rel="stylesheet" href="carino-theme.css">
+  <style>
+    /* the hero mark in both colourings; the theme picks one */
+    .mast .mark.mk-color,:root[data-carino-theme="color"] .mast .mark.mk-gold{display:none;}
+    :root[data-carino-theme="color"] .mast .mark.mk-color{display:block;}
+    /* Colourful: carino-theme.css remaps the tokens, so everything that reads
+       one follows; these are the values above written for black. Screen only:
+       the print sheet keeps its own black-on-white tokens. The QR wells stay
+       white on purpose, a scanner needs the quiet zone. */
+    @media screen{
+      :root[data-carino-theme="color"]{--primary-hover:var(--ct-accent-strong);--border-ui:var(--text-muted);
+        --ochre-warn:var(--warn);--err-text:var(--err);--err-loud:var(--ct-err-fg);
+        --kind-business:var(--ct-amber);--kind-business-soft:color-mix(in srgb,var(--ct-amber) 10%,transparent);
+        --kind-personal:var(--ct-teal);--kind-personal-soft:color-mix(in srgb,var(--ct-teal) 10%,transparent);}
+      :root[data-carino-theme="color"] ::-webkit-scrollbar-thumb{background:var(--ct-scroll);}
+      :root[data-carino-theme="color"] .skip:focus,:root[data-carino-theme="color"] .btn-primary,:root[data-carino-theme="color"] .btn-primary:enabled:hover{color:var(--ct-on-accent);}
+      :root[data-carino-theme="color"] .btn-primary:enabled:hover{box-shadow:var(--ct-shadow-2);}
+      :root[data-carino-theme="color"] .tile:hover,:root[data-carino-theme="color"] .tile:focus-visible{box-shadow:var(--ct-shadow-2);}
+      :root[data-carino-theme="color"] .updatebar{box-shadow:var(--ct-shadow-3);}
+      :root[data-carino-theme="color"] dialog{box-shadow:var(--ct-shadow-3);}
+      :root[data-carino-theme="color"] dialog::backdrop{background:var(--ct-scrim);}
+    }
+  </style>
 </head>
 <body>
 
@@ -835,7 +877,8 @@
 <main class="wrap col" id="main" tabindex="-1">
 
   <header class="mast">
-    <img class="mark" src="logo.svg" alt="" width="48" height="48">
+    <img class="mark mk-gold" src="logo.svg" alt="" width="48" height="48">
+    <img class="mark mk-color" src="logo-color.svg" alt="" width="48" height="48">
     <p class="kicker" data-i18n>Works offline. Nothing leaves this device.</p>
     <h1 class="lede" data-i18n>Your tax numbers for every country, ready to read out at the counter.</h1>
     <p class="sub">
@@ -1118,6 +1161,7 @@
 </div>
 
 <script src="carino-navbar.js" data-app="Fiscal" data-repo="Fiscal" defer></script>
+<script src="carino-theme.js" data-mark="logo.svg" data-mark-color="logo-color.svg" defer></script>
 <!-- The Export menu (and any drawer) are wired by the shared UI script. -->
 <script src="carino-ui.js" defer></script>
 <script src="carino-lang.js" defer></script>
