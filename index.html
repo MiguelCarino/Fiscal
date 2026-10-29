@@ -851,6 +851,8 @@
       :root[data-carino-theme="color"] .skip:focus,:root[data-carino-theme="color"] .btn-primary,:root[data-carino-theme="color"] .btn-primary:enabled:hover{color:var(--ct-on-accent);}
       :root[data-carino-theme="color"] .btn-primary:enabled:hover{box-shadow:var(--ct-shadow-2);}
       :root[data-carino-theme="color"] .tile:hover,:root[data-carino-theme="color"] .tile:focus-visible{box-shadow:var(--ct-shadow-2);}
+      /* the kind pill: amber/teal at small mono size sit near 3:1 on white; deepen only its text toward --text */
+      :root[data-carino-theme="color"] .tile .t-kind{color:color-mix(in srgb,var(--kind) 60%,var(--text));}
       :root[data-carino-theme="color"] .updatebar{box-shadow:var(--ct-shadow-3);}
       :root[data-carino-theme="color"] dialog{box-shadow:var(--ct-shadow-3);}
       :root[data-carino-theme="color"] dialog::backdrop{background:var(--ct-scrim);}
