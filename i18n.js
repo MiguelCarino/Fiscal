@@ -127,6 +127,8 @@ const I18N = {
         "Opening Quote…": "Abriendo Quote…",
         "Sent to Quote": "Enviado a Quote",
         "Quote did not answer": "Quote no respondió",
+        "Open in Files": "Abrir en Files",
+        "Could not open Files": "No se pudo abrir Files",
         "The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.": "El enlace lleva la tarjeta después del «#», que los navegadores nunca envían al servidor: no se sube nada. Sí queda en el historial y el portapapeles, así que trátalo como algo compartido, no secreto.",
         "Speak it": "Léelo en voz alta",
 
@@ -394,6 +396,8 @@ const I18N = {
         "Opening Quote…": "Abrindo o Quote…",
         "Sent to Quote": "Enviado para o Quote",
         "Quote did not answer": "O Quote não respondeu",
+        "Open in Files": "Abrir no Files",
+        "Could not open Files": "Não foi possível abrir o Files",
         "The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.": "O link carrega o cartão depois do “#”, que os navegadores nunca enviam ao servidor — nada é enviado. Mas ele fica no histórico e na área de transferência, então trate como compartilhamento, não como segredo.",
         "Speak it": "Ler em voz alta",
 
@@ -662,6 +666,8 @@ const I18N = {
         "Opening Quote…": "Quoteを開いています…",
         "Sent to Quote": "Quoteへ送りました",
         "Quote did not answer": "Quoteが応答しませんでした",
+        "Open in Files": "Filesで開く",
+        "Could not open Files": "Filesを開けませんでした",
         "The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.": "リンクは「#」より後ろにカードを載せます。ブラウザはこの部分をサーバーへ送りません。ただし履歴やクリップボードには残るため、秘密ではなく共有物として扱ってください。",
         "Speak it": "読み上げる",
 
@@ -931,6 +937,8 @@ const I18N = {
         "Opening Quote…": "Открываем Quote…",
         "Sent to Quote": "Отправлено в Quote",
         "Quote did not answer": "Quote не ответил",
+        "Open in Files": "Открыть в Files",
+        "Could not open Files": "Не удалось открыть Files",
         "The link carries the card after the “#”, which browsers never send to a server — so nothing is uploaded. It does sit in history and clipboards, so treat it as a share, not a secret.": "Ссылка несёт карту после «#», а эту часть браузеры никогда не отправляют на сервер — ничего не загружается. Но она остаётся в истории и буфере обмена, так что это обмен, а не секрет.",
         "Speak it": "Прочитать вслух",
 

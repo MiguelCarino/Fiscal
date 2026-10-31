@@ -1502,7 +1502,7 @@
         }
 
         // Nothing can leave, so the buttons that would send nothing go with it.
-        [$('#shareImage'), $('#shareLink'), $('#shareVcf'), $('#shareVcard')]
+        [$('#shareImage'), $('#shareFiles'), $('#shareLink'), $('#shareVcf'), $('#shareVcard')]
             .forEach((b) => { b.hidden = blank; });
         // Quote takes the user's own card and answers 'declined' for anything
         // else, and a demo sample and a card previewed from someone else's link
@@ -1525,7 +1525,10 @@
         sideNote('shareStatus', 'ed-hint', '#shareDlg .shr-warn');
     }
 
-    async function shareImage() {
+    // The card image as a File, or null (with the reason shown under the
+    // buttons) when this browser cannot paint one. Save as image and Open in
+    // Files hand on the same PNG.
+    async function cardImageFile() {
         const { rec, card } = shareState;
         const lines = shareLines(rec, card);
         // With the card and the record, a row whose value is refused is not
@@ -1542,16 +1545,20 @@
             const status = sideNote('shareStatus', 'ed-hint err', '#shareDlg .shr-warn');
             status.append(el('div', null, TT('This browser could not turn the card into an image.')));
             status.hidden = false;
-            return;
+            return null;
         }
+        return new File([blob], 'fiscal-' + card.iso.toLowerCase() + '.png', { type: 'image/png' });
+    }
 
-        const file = new File([blob], 'fiscal-' + card.iso.toLowerCase() + '.png', { type: 'image/png' });
+    async function shareImage() {
+        const file = await cardImageFile();
+        if (!file) return;
         // Share sheet where there is one — this is a WhatsApp transaction far
         // more often than it is a download.
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try { await navigator.share({ files: [file] }); return; } catch (e) { /* fall through */ }
         }
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(file);
         const a = document.createElement('a');
         a.href = url;
         a.download = file.name;
@@ -3278,6 +3285,30 @@
         });
 
         $('#shareImage').addEventListener('click', guard(shareImage));
+
+        // The same PNG as Save as image, handed to files.carino.systems in
+        // memory. The bridge opens the tab straight from the click and paints
+        // the image only once Files says it is listening.
+        $('#shareFiles').addEventListener('click', guard(async function () {
+            const FILES_URL = 'https://files.carino.systems/';
+            if (!window.CarinoBridge) { window.open(FILES_URL, '_blank', 'noopener'); return; }
+            let painted = true;
+            try {
+                await window.CarinoBridge.send(FILES_URL + '#carino-bridge', async () => {
+                    const file = await cardImageFile();
+                    if (!file) { painted = false; throw new Error('no image'); }
+                    return [file];
+                }, { timeout: 30000 });
+            } catch (e) {
+                // cardImageFile() has already said why there is no image.
+                if (!painted) return;
+                const status = sideNote('shareStatus', 'ed-hint err', '#shareDlg .shr-warn');
+                status.append(el('div', null, /blocked/.test(e && e.message)
+                    ? TT('Your browser blocked the pop-up. Allow pop-ups for this page and try again.')
+                    : TT('Could not open Files')));
+                status.hidden = false;
+            }
+        }));
 
         $('#shareLink').addEventListener('click', function () {
             copy(shareState.link, this);
