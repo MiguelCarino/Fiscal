@@ -860,6 +860,28 @@
   </style>
 </head>
 <body>
+<!-- Key words: the navbar shows them, translated, under its Language tab. -->
+<ul data-carino-words hidden>
+  <li>Your cards</li>
+  <li>Jurisdiction</li>
+  <li>Check a number</li>
+  <li>Share this card</li>
+  <li>Official QR</li>
+  <li>Add card</li>
+</ul>
+
+<!-- Bundled libraries: the navbar lists them in its About window, Licence tab. -->
+<ul data-carino-libs data-href="https://github.com/MiguelCarino/Fiscal/tree/main/vendor" hidden>
+  <li data-licence="MIT">qrcode-generator</li>
+  <li data-licence="Apache-2.0">PDF.js</li>
+</ul>
+
+
+<!-- What this page must say: the navbar shows it in its About window. -->
+<div data-carino-about hidden>
+  <p data-i18n>Runs in your browser. Nothing you add here is uploaded.</p>
+</div>
+
 
 <a class="skip" id="skipLink" href="#main" data-i18n>Skip to your cards</a>
 
@@ -916,14 +938,12 @@
       <p class="empty-t" data-i18n>No card yet</p>
       <p class="empty-d" data-i18n>Add one and it stays on this device — nothing is ever sent anywhere.</p>
       <div class="examples"><span class="ex-label" data-i18n>Try:</span><button type="button" class="chip-tag" id="demoChip" data-i18n>See it with sample cards</button></div>
-      <p class="privacy-line" data-i18n>Runs in your browser. Nothing you add here is uploaded.</p>
     </div>
     <div class="grid" id="cardGrid"></div>
   </section>
 
   <section class="manage">
     <div class="privacy">
-      <p class="privacy-line pv-lead" data-i18n>Runs in your browser. Nothing you add here is uploaded.</p>
       <!-- The old wording claimed no network requests at all after load, which a
            reader disproves in one devtools screenshot: the registry record for a
            country is fetched when that card is opened. On the one panel whose
