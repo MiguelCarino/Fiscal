@@ -1,0 +1,57 @@
+/* The printed card. One file, two readers, so they cannot drift apart:
+   index.html links it for paper only (media="print"), where it styles
+   #printSheet once that sheet takes the page; js/app.js links it, unscoped,
+   into the print preview, whose frame is the very document the Print button
+   sends to the printer. Edit the sheet here and both follow. */
+#printSheet{font-family:var(--mono);color:#000;background:#fff;}
+.ps-card{max-width:112mm;border:1.5pt solid #000;border-radius:3mm;
+  padding:7mm 8mm 6mm;page-break-inside:avoid;}
+.ps-head{display:flex;align-items:baseline;gap:5pt;border-bottom:0.75pt solid #000;
+  padding-bottom:4pt;margin-bottom:7pt;}
+.ps-flag{font-size:14pt;line-height:1;}
+.ps-country{font-family:var(--display);font-weight:800;font-size:13pt;
+  text-transform:uppercase;letter-spacing:0.6pt;flex:1;}
+.ps-tier{font-size:7.5pt;text-transform:uppercase;letter-spacing:0.8pt;
+  border:0.75pt solid #000;border-radius:999px;padding:1pt 5pt;white-space:nowrap;}
+.ps-label{font-family:var(--display);font-weight:700;font-size:12pt;line-height:1.25;}
+.ps-auth{font-size:8pt;color:#333;margin-top:1pt;}
+.ps-lead{margin:8pt 0 4pt;}
+/* The number is the artefact. Everything above it is context and
+   everything below it is qualification. */
+.ps-lead .ps-k{font-size:8pt;letter-spacing:1.4pt;text-transform:uppercase;color:#333;}
+.ps-v{font-size:21pt;font-weight:700;letter-spacing:1.2pt;line-height:1.2;
+  overflow-wrap:anywhere;font-variant-numeric:tabular-nums;margin-top:1pt;}
+/* Valid, unchecked and refused are three different words with three
+   different marks, and none of them depends on a colour surviving a
+   black-and-white printer. Paper has no colour and no hover, so the three
+   also differ in shape and weight, and they escalate in that order: no
+   box at all, a light dashed box, a heavy solid box in bold. A failed
+   check digit and a refused number share the heavy box because neither
+   may ever read softer than the other; "not checked" must never be
+   mistaken for either. The distinctions are all borders and weights
+   rather than fills — a printer with background graphics off drops a fill
+   and would leave reversed text invisible. */
+.ps-state{font-size:8pt;text-transform:uppercase;letter-spacing:0.9pt;margin-top:3pt;}
+.ps-state.ok::before{content:"✓ ";}
+.ps-state.err::before{content:"✕ ";}
+.ps-state.warn::before{content:"! ";font-weight:700;}
+.ps-state.warn{border:0.5pt dashed #000;padding:1pt 4pt;display:inline-block;}
+.ps-state.err{border:1.5pt solid #000;padding:1.5pt 5pt;display:inline-block;
+  font-weight:700;letter-spacing:1.3pt;}
+.ps-phon{font-size:9pt;line-height:1.5;margin-top:5pt;padding-left:5pt;
+  border-left:1.5pt solid #000;}
+.ps-rows{margin-top:8pt;border-top:0.75pt solid #000;}
+.ps-row{display:flex;gap:8pt;padding:3.5pt 0;border-bottom:0.5pt solid #999;
+  page-break-inside:avoid;}
+.ps-rk{width:30%;flex:none;font-size:8pt;text-transform:uppercase;
+  letter-spacing:0.9pt;color:#333;}
+.ps-rv{flex:1;font-size:10.5pt;overflow-wrap:anywhere;}
+.ps-foot{margin-top:7pt;display:flex;flex-wrap:wrap;gap:2pt 10pt;
+  font-size:7.5pt;color:#333;line-height:1.5;}
+.ps-src{margin-left:auto;}
+/* Last, so it outranks the boxed states above it: a part with nothing in
+   it prints nothing at all. An empty tier is a stray rounded outline, an
+   empty rows block a rule across the card, an empty phonetic line a rule
+   down the side of nothing, and an empty state a box around no verdict. */
+.ps-tier:empty,.ps-auth:empty,.ps-label:empty,.ps-state:empty,
+.ps-phon:empty,.ps-rows:empty,.ps-note:empty,.ps-src:empty{display:none;}

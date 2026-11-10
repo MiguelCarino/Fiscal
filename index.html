@@ -509,6 +509,21 @@
       border-top:1px solid var(--border);flex:none;}
     .dlg-foot .left{margin-right:auto;}
 
+    /* The print preview is the fleet's report preview (carino-ui.css 18b,
+       .rpv-*). It stays a modal <dialog>, because it opens over the card
+       dialog and only another top-layer dialog can sit above that one; these
+       rules undo the dialog box above so the element is just the .rpv-scrim.
+       app.js scales the frame down on a stage narrower than a sheet. */
+    #printDlg{margin:0;width:auto;height:auto;max-width:none;max-height:none;
+      border:0;border-radius:0;box-shadow:none;overflow:hidden;}
+    #printDlg[open]{display:flex;flex-direction:row;max-height:none;}
+    /* .rpv-scrim's display:flex is an author rule and would beat the UA's
+       hidden-when-closed one, as the dialog note above warns. */
+    #printDlg:not([open]){display:none;}
+    #printDlg::backdrop{background:transparent;}
+    .rpv-frame[hidden]{display:none;}
+    .pv-empty{margin:0;padding:24px 18px;color:#1f2328;font-family:var(--mono);font-size:var(--fs-sec);line-height:1.5;}
+
     .input,.select,.textarea{background:var(--bg-elev);border:1px solid var(--border-ui);
       border-radius:6px;color:var(--text);font-family:var(--mono);font-size:var(--fs-sm);
       padding:9px 11px;width:100%;transition:0.15s;}
@@ -778,60 +793,10 @@
       .tile{box-shadow:none;break-inside:avoid;}
       body:has(#psLeadV:not(:empty)) #main{display:none!important;}
       body:has(#psLeadV:not(:empty)) #printSheet{display:block!important;}
-      #printSheet{font-family:var(--mono);color:#000;background:#fff;}
-      .ps-card{max-width:112mm;border:1.5pt solid #000;border-radius:3mm;
-        padding:7mm 8mm 6mm;page-break-inside:avoid;}
-      .ps-head{display:flex;align-items:baseline;gap:5pt;border-bottom:0.75pt solid #000;
-        padding-bottom:4pt;margin-bottom:7pt;}
-      .ps-flag{font-size:14pt;line-height:1;}
-      .ps-country{font-family:var(--display);font-weight:800;font-size:13pt;
-        text-transform:uppercase;letter-spacing:0.6pt;flex:1;}
-      .ps-tier{font-size:7.5pt;text-transform:uppercase;letter-spacing:0.8pt;
-        border:0.75pt solid #000;border-radius:999px;padding:1pt 5pt;white-space:nowrap;}
-      .ps-label{font-family:var(--display);font-weight:700;font-size:12pt;line-height:1.25;}
-      .ps-auth{font-size:8pt;color:#333;margin-top:1pt;}
-      .ps-lead{margin:8pt 0 4pt;}
-      /* The number is the artefact. Everything above it is context and
-         everything below it is qualification. */
-      .ps-lead .ps-k{font-size:8pt;letter-spacing:1.4pt;text-transform:uppercase;color:#333;}
-      .ps-v{font-size:21pt;font-weight:700;letter-spacing:1.2pt;line-height:1.2;
-        overflow-wrap:anywhere;font-variant-numeric:tabular-nums;margin-top:1pt;}
-      /* Valid, unchecked and refused are three different words with three
-         different marks, and none of them depends on a colour surviving a
-         black-and-white printer. Paper has no colour and no hover, so the three
-         also differ in shape and weight, and they escalate in that order: no
-         box at all, a light dashed box, a heavy solid box in bold. A failed
-         check digit and a refused number share the heavy box because neither
-         may ever read softer than the other; "not checked" must never be
-         mistaken for either. The distinctions are all borders and weights
-         rather than fills — a printer with background graphics off drops a fill
-         and would leave reversed text invisible. */
-      .ps-state{font-size:8pt;text-transform:uppercase;letter-spacing:0.9pt;margin-top:3pt;}
-      .ps-state.ok::before{content:"✓ ";}
-      .ps-state.err::before{content:"✕ ";}
-      .ps-state.warn::before{content:"! ";font-weight:700;}
-      .ps-state.warn{border:0.5pt dashed #000;padding:1pt 4pt;display:inline-block;}
-      .ps-state.err{border:1.5pt solid #000;padding:1.5pt 5pt;display:inline-block;
-        font-weight:700;letter-spacing:1.3pt;}
-      .ps-phon{font-size:9pt;line-height:1.5;margin-top:5pt;padding-left:5pt;
-        border-left:1.5pt solid #000;}
-      .ps-rows{margin-top:8pt;border-top:0.75pt solid #000;}
-      .ps-row{display:flex;gap:8pt;padding:3.5pt 0;border-bottom:0.5pt solid #999;
-        page-break-inside:avoid;}
-      .ps-rk{width:30%;flex:none;font-size:8pt;text-transform:uppercase;
-        letter-spacing:0.9pt;color:#333;}
-      .ps-rv{flex:1;font-size:10.5pt;overflow-wrap:anywhere;}
-      .ps-foot{margin-top:7pt;display:flex;flex-wrap:wrap;gap:2pt 10pt;
-        font-size:7.5pt;color:#333;line-height:1.5;}
-      .ps-src{margin-left:auto;}
-      /* Last, so it outranks the boxed states above it: a part with nothing in
-         it prints nothing at all. An empty tier is a stray rounded outline, an
-         empty rows block a rule across the card, an empty phonetic line a rule
-         down the side of nothing, and an empty state a box around no verdict. */
-      .ps-tier:empty,.ps-auth:empty,.ps-label:empty,.ps-state:empty,
-      .ps-phon:empty,.ps-rows:empty,.ps-note:empty,.ps-src:empty{display:none;}
     }
   </style>
+  <!-- The printed card's own rules (paper only here; the print preview links the same file). -->
+  <link rel="stylesheet" href="print-sheet.css" media="print">
   <!-- Colourful theme + the switch; nothing applies until data-carino-theme="color". -->
   <link rel="stylesheet" href="carino-theme.css">
   <style>
@@ -1042,6 +1007,30 @@
     </div>
   </div>
   <div class="dlg-foot detail-acts" id="detailActions"></div>
+</dialog>
+
+<!-- print preview: the card's Print button opens this, not the printer. The
+     frame holds the very document Print below sends to the printer (its own
+     print()), so what is read here is what comes out; the ✕ prints nothing.
+     Everything but the sheet sits in the left column, Print at its foot. -->
+<dialog id="printDlg" class="rpv-scrim" aria-labelledby="printTitle">
+  <div class="rpv">
+    <aside class="rpv-side">
+      <div class="rpv-head">
+        <h2 class="rpv-title" id="printTitle" data-i18n>Print preview</h2>
+        <button class="modal-x rpv-x" type="button" data-close data-i18n-attr="aria-label" aria-label="Close">✕</button>
+      </div>
+      <p class="rpv-status" id="printStatus" role="status" aria-live="polite"></p>
+      <p class="rpv-name" id="printName"></p>
+      <div class="rpv-actions">
+        <button class="btn btn-primary" id="printGo" type="button" data-i18n>Print</button>
+      </div>
+    </aside>
+    <div class="rpv-stage" id="printStage">
+      <iframe class="rpv-frame" id="printFrame" data-i18n-attr="title" title="Print preview"></iframe>
+      <p class="pv-empty" id="printEmpty" hidden data-i18n>Nothing to print: the main number on this card is empty, or it never leaves this device.</p>
+    </div>
+  </div>
 </dialog>
 
 <!-- share -->

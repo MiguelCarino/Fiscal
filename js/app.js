@@ -1063,10 +1063,11 @@
         // The sheet is filled from the card in front of the user rather than
         // from whatever dialog happens to be open: counter mode leaves the
         // detail popup open underneath itself.
-        host.append(mk('', TT('Print'), () => {
-            fillPrintSheet(rec, card);
-            window.print();
-        }));
+        // Print opens the sheet as it will come out first; only the preview's
+        // own Print button reaches the printer.
+        const pb = mk('', TT('Print'), function () { openPrintPreview(rec, card, this); });
+        pb.dataset.act = 'print';
+        host.append(pb);
         if (!readOnly()) host.append(mk('btn-ghost', TT('Edit'), guard(() => openEditor(card))));
 
         // The field copies are named where they are built. This one is the
@@ -1318,7 +1319,10 @@
        index.html carries the skeleton and one rule: the sheet takes the page
        only while #psLeadV is not empty, and the page prints itself otherwise.
        So an unfillable sheet is left empty rather than filled with a
-       placeholder — a card there is nothing to print does not become one. */
+       placeholder — a card there is nothing to print does not become one.
+       The card's Print button goes through the preview, which says there is
+       nothing to print and keeps its Print disabled in that case; only a
+       Ctrl+P or browser-menu print (beforeprint) still prints the page. */
 
     function clearPrintSheet() {
         ['#psFlag', '#psCountry', '#psTier', '#psLabel', '#psAuth',
@@ -1333,7 +1337,8 @@
     // here than anywhere: a refused value is absent, not truncated and not
     // masked, and where the refused one is the identifier the sheet is FOR the
     // lead is left empty rather than quietly promoting the next value into its
-    // place. That leaves the page printing itself, which is the honest answer.
+    // place. The preview then shows 'Nothing to print' with Print disabled;
+    // only a Ctrl+P or browser-menu print still prints the page itself.
     function fillPrintSheet(rec, card) {
         clearPrintSheet();
         if (!card) return;
@@ -1406,6 +1411,184 @@
         $('#psLeadK').textContent = lead.name;
         // Last, because this is the switch for the whole sheet.
         $('#psLeadV').textContent = lead.shown;
+    }
+
+    /* ================= the print preview =================
+       The card's Print button shows the sheet before anything reaches a
+       printer. The frame's document is the one the preview's Print button
+       prints (the frame's own print()), built from #printSheet exactly as
+       fillPrintSheet leaves it and styled by print-sheet.css, the same file
+       index.html prints the sheet with. On screen that document draws itself
+       as an A4 sheet with the 14 mm @page margin over grey, with a dashed line
+       where a page would end; none of that is in @media print, so paper gets
+       the sheet alone. #printSheet is blanked again straight after, so a later
+       Ctrl+P behaves as it always has. The ✕ prints nothing. */
+    const PV_MM = 96 / 25.4;
+    const PV_A4 = { w: 210, h: 297, margin: 14 };
+    const PV_PAGE_PX = Math.round(PV_A4.w * PV_MM) + 32;   // the sheet and the grey either side
+    const preview = { rec: null, card: null, back: null, seq: 0 };
+
+    const pvEsc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    function previewTitle() {
+        const country = $('#psCountry').textContent;
+        const nick = $('#psLabel').textContent;
+        return ['Carino Fiscal', country, nick].filter(Boolean).join(' - ');
+    }
+
+    function previewDocument(title) {
+        const sheet = $('#printSheet').cloneNode(true);
+        sheet.removeAttribute('aria-hidden');
+        const css = (p) => '<link rel="stylesheet" href="' + pvEsc(new URL(p, document.baseURI).href) + '">';
+        const m = PV_A4.margin;
+        return '<!DOCTYPE html><html lang="' + pvEsc(document.documentElement.lang || 'en') + '"><head>'
+            + '<meta charset="utf-8"><title>' + pvEsc(title) + '</title>'
+            + css('fonts/carino-fonts.css') + css('carino-ui.css') + css('print-sheet.css')
+            + '<style>'
+            // What index.html's @media print block does to the page around the sheet.
+            + ':root{color-scheme:light;}@page{margin:' + m + 'mm;}'
+            + 'html,body{background:#fff;color:#000;}body{margin:0;}#printSheet{display:block;}'
+            + '@media screen{html{background:#d6d8dc;}'
+            + 'body{width:' + PV_A4.w + 'mm;min-height:' + PV_A4.h + 'mm;padding:' + m + 'mm;'
+            + 'margin:16px auto 24px;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.28);}'
+            + '.pv-break{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed #9aa0a8;pointer-events:none;}'
+            + '.pv-break span{position:absolute;left:8px;top:3px;font:10px var(--mono);color:#6b7280;}}'
+            + '@media print{.pv-break{display:none!important;}}'
+            + '</style></head><body>' + sheet.outerHTML + '</body></html>';
+    }
+
+    // A stage narrower than a sheet shows the sheet scaled down, as it prints,
+    // rather than the card reflowed to a phone's width. Only the frame element
+    // is scaled, so the document it prints is untouched.
+    function fitPrintPreview() {
+        const frame = $('#printFrame');
+        const stage = $('#printStage');
+        Object.assign(frame.style, { width: '', height: '', transform: '', transformOrigin: '' });
+        const w = stage.clientWidth;
+        if (!w || w >= PV_PAGE_PX) return;
+        const k = w / PV_PAGE_PX;
+        Object.assign(frame.style, {
+            width: PV_PAGE_PX + 'px', height: Math.round(stage.clientHeight / k) + 'px',
+            transform: 'scale(' + k + ')', transformOrigin: '0 0',
+        });
+    }
+
+    // Where a page ends on A4: the printable height after the @page margins.
+    function markPages(doc) {
+        const body = doc.body;
+        const sheet = doc.getElementById('printSheet');
+        if (!body || !sheet) return 1;
+        const m = PV_A4.margin * PV_MM;
+        const pageH = (PV_A4.h - 2 * PV_A4.margin) * PV_MM;
+        const pages = Math.max(1, Math.ceil(sheet.getBoundingClientRect().height / pageH - 0.001));
+        for (let i = 1; i < pages; i++) {
+            const line = doc.createElement('div');
+            line.className = 'pv-break';
+            line.style.top = Math.round(m + i * pageH) + 'px';
+            const tag = doc.createElement('span');
+            tag.textContent = TT('Page {n}', { n: i + 1 });
+            line.append(tag);
+            body.append(line);
+        }
+        return pages;
+    }
+
+    function refreshPrintPreview() {
+        if (!preview.card) return;
+        const seq = ++preview.seq;
+        const frame = $('#printFrame');
+        const go = $('#printGo');
+        fillPrintSheet(preview.rec, preview.card);
+        // The same switch index.html's print rule reads: no lead, no sheet.
+        const has = !!$('#psLeadV').textContent;
+        const title = previewTitle();
+        const html = has ? previewDocument(title) : '';
+        clearPrintSheet();
+
+        $('#printEmpty').hidden = has;
+        frame.hidden = !has;
+        go.disabled = true;
+        $('#printStatus').textContent = '';
+        $('#printName').textContent = has ? title : '';
+        frame.onload = null;
+        if (!has) { frame.removeAttribute('srcdoc'); return; }
+
+        let done = false;
+        const shown = async (late) => {
+            if (done || seq !== preview.seq) return;
+            // The timeout fires for a frame that never said it loaded: only a
+            // document that is complete and holds the sheet may be printed.
+            if (late === true) {
+                let ready = false;
+                try {
+                    const d = frame.contentDocument;
+                    ready = !!d && d.readyState === 'complete' && !!d.getElementById('printSheet');
+                } catch (e) { /* not readable */ }
+                if (!ready) {
+                    $('#printStatus').textContent = TT('Preview did not load');
+                    return;   // Print stays disabled; a late onload still finishes it
+                }
+            }
+            done = true;
+            frame.onload = null;
+            let pages = 1;
+            try {
+                const d = frame.contentDocument;
+                if (d.fonts) await d.fonts.ready;
+                if (seq !== preview.seq) return;
+                pages = markPages(d);
+                // Focus inside the frame (a click on the sheet, or after its
+                // print dialog) would keep Esc from reaching the dialog.
+                d.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && $('#printDlg').open) { e.preventDefault(); $('#printDlg').close(); }
+                });
+            } catch (e) { /* not readable: the sheet still shows and prints */ }
+            fitPrintPreview();
+            $('#printStatus').textContent = TT('{n} pages', { n: pages });
+            go.disabled = false;
+        };
+        frame.onload = shown;
+        setTimeout(() => shown(true), 5000);   // a frame that never says it loaded
+        frame.srcdoc = html;
+        fitPrintPreview();
+    }
+
+    function openPrintPreview(rec, card, opener) {
+        const dlg = $('#printDlg');
+        preview.rec = rec;
+        preview.card = card;
+        preview.back = opener || document.activeElement;
+        if (!dlg.open) dlg.showModal();
+        refreshPrintPreview();
+    }
+
+    function printFromPreview() {
+        const frame = $('#printFrame');
+        if ($('#printGo').disabled || frame.hidden || !frame.contentWindow) return;
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+        // Back to the dialog, so Esc closes the preview again.
+        $('#printGo').focus();
+    }
+
+    // Esc, the ✕ and the backdrop all end here, through the dialog's
+    // own close: the frame is emptied and focus goes back to the Print button.
+    function onPrintPreviewClosed() {
+        preview.seq++;
+        preview.rec = null;
+        preview.card = null;
+        const frame = $('#printFrame');
+        frame.onload = null;
+        frame.removeAttribute('srcdoc');
+        $('#printStatus').textContent = '';
+        $('#printName').textContent = '';
+        // A language change rebuilds the card's buttons while the preview is
+        // open, so the one that opened it may be gone: use the live one.
+        const back = (preview.back && preview.back.isConnected) ? preview.back
+            : document.querySelector('#detailActions [data-act="print"]');
+        preview.back = null;
+        if (back) { try { back.focus(); } catch (e) { /* gone */ } }
     }
 
     /* ================= share ================= */
@@ -3274,6 +3457,18 @@
             else clearPrintSheet();
         });
         window.addEventListener('afterprint', clearPrintSheet);
+
+        $('#printGo').addEventListener('click', printFromPreview);
+        $('#printDlg').addEventListener('close', onPrintPreviewClosed);
+        // A click that lands on the dialog element itself landed on its backdrop.
+        $('#printDlg').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) e.currentTarget.close();
+        });
+        window.addEventListener('resize', () => { if ($('#printDlg').open) fitPrintPreview(); });
+        // The sheet is written in the interface language, so it is written again.
+        window.addEventListener('carino:langchange', () => {
+            setTimeout(() => { if ($('#printDlg').open) refreshPrintPreview(); }, 0);
+        });
 
         // The tabs are radios, so the browser holds and announces the selection
         // and the stylesheet draws it. Read the value out of the group; a label
