@@ -53,6 +53,17 @@ DYNAMIC = {
     ("carino-theme.js", "key"): [],
 }
 
+# Fleet scripts that look their strings up through a helper of their own name
+# (carino-pdf.js: tr(), falling back to window.t), so no t( call shows them.
+# Keyed by file; the file must exist, or the entry is stale.
+SHARED_LOOKUPS = {
+    "carino-pdf.js": ["File", "PDF", "HTML", "Download PDF", "Download HTML"],
+}
+
+# Third-party code copied in by the fleet: minified, with t() calls that are
+# its own and not lookups at all.
+NOT_CALLERS = {"carino-html2canvas.js"}
+
 # Translated ahead of the markup that will show them. A key sits here only with
 # a reason; the list shrinking is progress, the list growing needs an argument.
 RESERVED = {
@@ -99,6 +110,8 @@ IDENTICAL_ON_PURPOSE = {
     ("es", "Personal"),
     ("es", "personal"),
     ("pt-BR", "Link"),
+    ("*", "PDF"),
+    ("*", "HTML"),
 }
 
 errors: list[str] = []
@@ -486,9 +499,14 @@ def main() -> int:
 
     # i18n.js is the implementation of t(), not a caller of it.
     sources = [p for p in sorted(ROOT.glob("js/*.js")) + sorted(ROOT.glob("*.js"))
-               if p != I18N]
+               if p != I18N and p.name not in NOT_CALLERS]
     literal, dynamic = js_keys(sources)
     declared = {k for keys in DYNAMIC.values() for k in keys}
+    for rel, keys in SHARED_LOOKUPS.items():
+        if (ROOT / rel).is_file():
+            declared |= set(keys)
+        else:
+            err("tools/check_i18n.py", f"SHARED_LOOKUPS names {rel}, which is not in the repo — delete the entry")
 
     # What the app actually asks for, then what the dictionaries are keyed on:
     # t() resolves an alias before it looks anything up, so a source string with

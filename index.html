@@ -1012,7 +1012,9 @@
 <!-- print preview: the card's Print button opens this, not the printer. The
      frame holds the very document Print below sends to the printer (its own
      print()), so what is read here is what comes out; the ✕ prints nothing.
-     Everything but the sheet sits in the left column, Print at its foot. -->
+     Everything but the sheet sits in the left column, Print and Download at
+     its foot; Download saves the same sheet as a PDF or an HTML page, by the
+     File switch app.js puts above the name (carino-pdf.js). -->
 <dialog id="printDlg" class="rpv-scrim" aria-labelledby="printTitle">
   <div class="rpv">
     <aside class="rpv-side">
@@ -1023,7 +1025,8 @@
       <p class="rpv-status" id="printStatus" role="status" aria-live="polite"></p>
       <p class="rpv-name" id="printName"></p>
       <div class="rpv-actions">
-        <button class="btn btn-primary" id="printGo" type="button" data-i18n>Print</button>
+        <button class="btn" id="printGo" type="button" data-i18n>Print</button>
+        <button class="btn btn-primary" id="printDownload" type="button" disabled>Download PDF</button>
       </div>
     </aside>
     <div class="rpv-stage" id="printStage">
@@ -1186,6 +1189,7 @@
 <script src="js/import.js" defer></script>
 <script src="js/share.js" defer></script>
 <script src="i18n.js" defer></script>
+<script src="carino-pdf.js" defer></script>
 <script src="js/app.js" defer></script>
 <script>
   // carino-navbar.js injects the shared header as document.body's first child,

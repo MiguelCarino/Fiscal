@@ -1426,7 +1426,7 @@
     const PV_MM = 96 / 25.4;
     const PV_A4 = { w: 210, h: 297, margin: 14 };
     const PV_PAGE_PX = Math.round(PV_A4.w * PV_MM) + 32;   // the sheet and the grey either side
-    const preview = { rec: null, card: null, back: null, seq: 0 };
+    const preview = { rec: null, card: null, back: null, seq: 0, title: '', format: null, busy: false };
 
     const pvEsc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -1437,25 +1437,97 @@
         return ['Carino Fiscal', country, nick].filter(Boolean).join(' - ');
     }
 
-    function previewDocument(title) {
+    // The sheet document's own style. In the preview, an A4 sheet at paper
+    // width over grey with a dashed line where each page ends; in a saved HTML
+    // file (forFile) the same sheet at most that wide, with no lines, so it
+    // reads on a phone too. Everything on-screen is @media screen, so print
+    // and the PDF get the sheet alone. Pure: tools/sheet.test.mjs runs it.
+    function previewSheetCss(a4, forFile) {
+        const m = a4.margin;
+        return ':root{color-scheme:light;}@page{margin:' + m + 'mm;}'
+            // What index.html's @media print block does to the page around the sheet.
+            + 'html,body{background:#fff;color:#000;}body{margin:0;}#printSheet{display:block;}'
+            + '@media screen{html{background:#d6d8dc;}'
+            + (forFile
+                ? 'body{max-width:' + (a4.w - 2 * m) + 'mm;padding:' + m + 'mm;'
+                    + 'margin:16px auto 24px;box-shadow:0 1px 6px rgba(0,0,0,.28);}'
+                    + '@media (max-width:' + (a4.w + 10) + 'mm){body{padding:16px;margin:0;box-shadow:none;}}}'
+                : 'body{width:' + a4.w + 'mm;min-height:' + a4.h + 'mm;padding:' + m + 'mm;'
+                    + 'margin:16px auto 24px;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.28);}'
+                    + '.pv-break{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed #9aa0a8;pointer-events:none;}'
+                    + '.pv-break span{position:absolute;left:8px;top:3px;font:10px var(--mono);color:#6b7280;}}'
+                    + '@media print{.pv-break{display:none!important;}}');
+    }
+
+    function previewDocument(title, forFile) {
         const sheet = $('#printSheet').cloneNode(true);
         sheet.removeAttribute('aria-hidden');
         const css = (p) => '<link rel="stylesheet" href="' + pvEsc(new URL(p, document.baseURI).href) + '">';
-        const m = PV_A4.margin;
         return '<!DOCTYPE html><html lang="' + pvEsc(document.documentElement.lang || 'en') + '"><head>'
             + '<meta charset="utf-8"><title>' + pvEsc(title) + '</title>'
             + css('fonts/carino-fonts.css') + css('carino-ui.css') + css('print-sheet.css')
-            + '<style>'
-            // What index.html's @media print block does to the page around the sheet.
-            + ':root{color-scheme:light;}@page{margin:' + m + 'mm;}'
-            + 'html,body{background:#fff;color:#000;}body{margin:0;}#printSheet{display:block;}'
-            + '@media screen{html{background:#d6d8dc;}'
-            + 'body{width:' + PV_A4.w + 'mm;min-height:' + PV_A4.h + 'mm;padding:' + m + 'mm;'
-            + 'margin:16px auto 24px;position:relative;box-shadow:0 1px 6px rgba(0,0,0,.28);}'
-            + '.pv-break{position:absolute;left:0;right:0;height:0;border-top:1.5px dashed #9aa0a8;pointer-events:none;}'
-            + '.pv-break span{position:absolute;left:8px;top:3px;font:10px var(--mono);color:#6b7280;}}'
-            + '@media print{.pv-break{display:none!important;}}'
-            + '</style></head><body>' + sheet.outerHTML + '</body></html>';
+            + '<style>' + previewSheetCss(PV_A4, forFile) + '</style></head><body>' + sheet.outerHTML + '</body></html>';
+    }
+
+    /* The file: PDF or HTML (carino-pdf.js). Download saves the sheet the
+       preview shows, as the File switch says: a PDF drawn from it on A4 with
+       the sheet's margin, or the sheet as one standalone HTML page. Its
+       stylesheets are written into it first, so the PDF is drawn with them
+       loaded and the HTML opens with no connection. It is made from
+       #printSheet again, filled the same way, and blanked straight after. */
+    const pdfLib = () => window.CarinoPdf || null;
+    const fileFormat = () => (preview.format ? preview.format.get() : 'pdf');
+
+    function ensureFormatSwitch() {
+        if (preview.format || !pdfLib()) return;
+        preview.format = pdfLib().formatSwitch({ onChange: showFileName });
+        $('#printName').before(preview.format.el);
+    }
+
+    function showFileName() {
+        const lib = pdfLib();
+        const t = preview.title;
+        $('#printName').textContent = t ? (lib ? lib.fileName(t, fileFormat()) : t) : '';
+        $('#printName').title = $('#printName').textContent;
+        const dl = $('#printDownload');
+        dl.textContent = lib ? lib.label(fileFormat()) : TT('Download PDF');
+        dl.hidden = !lib;
+    }
+
+    function previewReady(ready) {
+        $('#printGo').disabled = !ready;
+        $('#printDownload').disabled = !ready || preview.busy;
+    }
+
+    async function downloadFromPreview() {
+        const lib = pdfLib();
+        if (!lib || preview.busy || !preview.card || $('#printDownload').disabled) return;
+        const seq = preview.seq;
+        const format = fileFormat();
+        fillPrintSheet(preview.rec, preview.card);
+        const has = !!$('#psLeadV').textContent;
+        const title = previewTitle();
+        const html = has ? previewDocument(title, true) : '';
+        clearPrintSheet();
+        if (!has) return;
+        const before = $('#printStatus').textContent;
+        preview.busy = true;
+        previewReady(true);
+        if (format === 'pdf') $('#printStatus').textContent = TT('Creating the PDF…');
+        let r;
+        try {
+            const file = await lib.htmlFile(html);
+            r = await lib.download({
+                html: file, name: title, format, title,
+                page: { w: PV_A4.w, h: PV_A4.h, margin: [PV_A4.margin, PV_A4.margin, PV_A4.margin, PV_A4.margin] },
+                producer: 'Carino Fiscal · fiscal.carino.systems',
+            });
+        } catch (e) { r = { ok: false, error: String(e) }; }
+        preview.busy = false;
+        if (seq !== preview.seq) return;   // closed or rebuilt meanwhile
+        previewReady(true);
+        $('#printStatus').textContent = r.ok ? before
+            : format === 'pdf' ? TT('Could not create the PDF.') : TT('Could not create the HTML file.');
     }
 
     // A stage narrower than a sheet shows the sheet scaled down, as it prints,
@@ -1498,7 +1570,6 @@
         if (!preview.card) return;
         const seq = ++preview.seq;
         const frame = $('#printFrame');
-        const go = $('#printGo');
         fillPrintSheet(preview.rec, preview.card);
         // The same switch index.html's print rule reads: no lead, no sheet.
         const has = !!$('#psLeadV').textContent;
@@ -1508,9 +1579,12 @@
 
         $('#printEmpty').hidden = has;
         frame.hidden = !has;
-        go.disabled = true;
+        previewReady(false);
         $('#printStatus').textContent = '';
-        $('#printName').textContent = has ? title : '';
+        preview.title = has ? title : '';
+        ensureFormatSwitch();
+        if (preview.format) preview.format.relabel();
+        showFileName();
         frame.onload = null;
         if (!has) { frame.removeAttribute('srcdoc'); return; }
 
@@ -1546,7 +1620,7 @@
             } catch (e) { /* not readable: the sheet still shows and prints */ }
             fitPrintPreview();
             $('#printStatus').textContent = TT('{n} pages', { n: pages });
-            go.disabled = false;
+            previewReady(true);
         };
         frame.onload = shown;
         setTimeout(() => shown(true), 5000);   // a frame that never says it loaded
@@ -1583,6 +1657,8 @@
         frame.removeAttribute('srcdoc');
         $('#printStatus').textContent = '';
         $('#printName').textContent = '';
+        preview.title = '';
+        previewReady(false);
         // A language change rebuilds the card's buttons while the preview is
         // open, so the one that opened it may be gone: use the live one.
         const back = (preview.back && preview.back.isConnected) ? preview.back
@@ -3459,6 +3535,7 @@
         window.addEventListener('afterprint', clearPrintSheet);
 
         $('#printGo').addEventListener('click', printFromPreview);
+        $('#printDownload').addEventListener('click', downloadFromPreview);
         $('#printDlg').addEventListener('close', onPrintPreviewClosed);
         // A click that lands on the dialog element itself landed on its backdrop.
         $('#printDlg').addEventListener('click', (e) => {
